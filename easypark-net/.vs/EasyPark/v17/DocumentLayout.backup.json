@@ -1,0 +1,581 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\easypark.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:easypark.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\controllers\\vagascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:controllers\\vagascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\controllers\\estacionamentoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:controllers\\estacionamentoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\controllers\\jobscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:controllers\\jobscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\data\\easyparkcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:data\\easyparkcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\dtos\\estacionamentodto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:dtos\\estacionamentodto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\dtos\\etaupdateoutdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:dtos\\etaupdateoutdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\dtos\\jobcountoutdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:dtos\\jobcountoutdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\dtos\\vagadto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:dtos\\vagadto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\dtos\\vagastatusoutdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:dtos\\vagastatusoutdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\exceptions\\entitynotfoundexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:exceptions\\entitynotfoundexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\filters\\exceptionfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:filters\\exceptionfilter.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\vagastatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\vagastatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\vaga.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\vaga.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\usuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\usuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\tipovaga.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\tipovaga.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\sensorevento.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\sensorevento.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\sensor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\sensor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\reservapreco.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\reservapreco.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\reservahist.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\reservahist.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\reserva.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\reserva.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\pagamentopagador.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\pagamentopagador.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\pagamentocartao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\pagamentocartao.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\pagamento.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\pagamento.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\nivel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\nivel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\models\\estacionamento.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:models\\estacionamento.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\services\\estacionamentoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:services\\estacionamentoservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\services\\jobsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:services\\jobsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\services\\vagaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:services\\vagaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|c:\\users\\gabri\\fiap\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\exceptions\\businessexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{31D9C2F3-AC8E-403B-BE29-123456789ABC}|EasyPark.Api.csproj|solutionrelative:exceptions\\businessexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 8,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-10-15T16:34:43.454Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "EasyPark.Api",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\EasyPark.Api.csproj",
+              "RelativeDocumentMoniker": "EasyPark.Api.csproj",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\EasyPark.Api.csproj",
+              "RelativeToolTip": "EasyPark.Api.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-10-15T16:31:06.175Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "JobsController.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Controllers\\JobsController.cs",
+              "RelativeDocumentMoniker": "Controllers\\JobsController.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Controllers\\JobsController.cs",
+              "RelativeToolTip": "Controllers\\JobsController.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAgwCgAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:29:32.345Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "VagasController.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Controllers\\VagasController.cs",
+              "RelativeDocumentMoniker": "Controllers\\VagasController.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Controllers\\VagasController.cs",
+              "RelativeToolTip": "Controllers\\VagasController.cs",
+              "ViewState": "AgIAADEAAAAAAAAAAAA0wBUAAABFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:27:06.621Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "EasyParkContext.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Data\\EasyParkContext.cs",
+              "RelativeDocumentMoniker": "Data\\EasyParkContext.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Data\\EasyParkContext.cs",
+              "RelativeToolTip": "Data\\EasyParkContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:23:19.3Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "EtaUpdateOutDto.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\EtaUpdateOutDto.cs",
+              "RelativeDocumentMoniker": "Dtos\\EtaUpdateOutDto.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\EtaUpdateOutDto.cs",
+              "RelativeToolTip": "Dtos\\EtaUpdateOutDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:22:59.435Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "JobCountOutDto.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\JobCountOutDto.cs",
+              "RelativeDocumentMoniker": "Dtos\\JobCountOutDto.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\JobCountOutDto.cs",
+              "RelativeToolTip": "Dtos\\JobCountOutDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:22:54.676Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "VagaDto.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\VagaDto.cs",
+              "RelativeDocumentMoniker": "Dtos\\VagaDto.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\VagaDto.cs",
+              "RelativeToolTip": "Dtos\\VagaDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:22:50.26Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-10-15T11:58:31.435Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "VagaStatusOutDto.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\VagaStatusOutDto.cs",
+              "RelativeDocumentMoniker": "Dtos\\VagaStatusOutDto.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\VagaStatusOutDto.cs",
+              "RelativeToolTip": "Dtos\\VagaStatusOutDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:22:44.588Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T15:39:33.495Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "EstacionamentosController.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Controllers\\EstacionamentosController.cs",
+              "RelativeDocumentMoniker": "Controllers\\EstacionamentosController.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Controllers\\EstacionamentosController.cs",
+              "RelativeToolTip": "Controllers\\EstacionamentosController.cs",
+              "ViewState": "AgIAACYAAAAAAAAAAAAwwD4AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T11:57:12.747Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "EntityNotFoundException.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Exceptions\\EntityNotFoundException.cs",
+              "RelativeDocumentMoniker": "Exceptions\\EntityNotFoundException.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Exceptions\\EntityNotFoundException.cs",
+              "RelativeToolTip": "Exceptions\\EntityNotFoundException.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:21:48.871Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "ExceptionFilter.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Filters\\ExceptionFilter.cs",
+              "RelativeDocumentMoniker": "Filters\\ExceptionFilter.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Filters\\ExceptionFilter.cs",
+              "RelativeToolTip": "Filters\\ExceptionFilter.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:20:34.543Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "VagaStatus.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\VagaStatus.cs",
+              "RelativeDocumentMoniker": "Models\\VagaStatus.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\VagaStatus.cs",
+              "RelativeToolTip": "Models\\VagaStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:20:25.631Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Vaga.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Vaga.cs",
+              "RelativeDocumentMoniker": "Models\\Vaga.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Vaga.cs",
+              "RelativeToolTip": "Models\\Vaga.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:20:19.705Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "EstacionamentoDto.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\EstacionamentoDto.cs",
+              "RelativeDocumentMoniker": "Dtos\\EstacionamentoDto.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Dtos\\EstacionamentoDto.cs",
+              "RelativeToolTip": "Dtos\\EstacionamentoDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T11:58:05.44Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Usuario.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Usuario.cs",
+              "RelativeDocumentMoniker": "Models\\Usuario.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Usuario.cs",
+              "RelativeToolTip": "Models\\Usuario.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:20:14.614Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "TipoVaga.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\TipoVaga.cs",
+              "RelativeDocumentMoniker": "Models\\TipoVaga.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\TipoVaga.cs",
+              "RelativeToolTip": "Models\\TipoVaga.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:20:06.794Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "SensorEvento.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\SensorEvento.cs",
+              "RelativeDocumentMoniker": "Models\\SensorEvento.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\SensorEvento.cs",
+              "RelativeToolTip": "Models\\SensorEvento.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:19:51.803Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "Sensor.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Sensor.cs",
+              "RelativeDocumentMoniker": "Models\\Sensor.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Sensor.cs",
+              "RelativeToolTip": "Models\\Sensor.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:19:39.893Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "ReservaPreco.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\ReservaPreco.cs",
+              "RelativeDocumentMoniker": "Models\\ReservaPreco.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\ReservaPreco.cs",
+              "RelativeToolTip": "Models\\ReservaPreco.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:19:26.467Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "ReservaHist.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\ReservaHist.cs",
+              "RelativeDocumentMoniker": "Models\\ReservaHist.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\ReservaHist.cs",
+              "RelativeToolTip": "Models\\ReservaHist.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:19:14.11Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "Reserva.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Reserva.cs",
+              "RelativeDocumentMoniker": "Models\\Reserva.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Reserva.cs",
+              "RelativeToolTip": "Models\\Reserva.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:18:28.358Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "PagamentoPagador.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\PagamentoPagador.cs",
+              "RelativeDocumentMoniker": "Models\\PagamentoPagador.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\PagamentoPagador.cs",
+              "RelativeToolTip": "Models\\PagamentoPagador.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:18:17.23Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "PagamentoCartao.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\PagamentoCartao.cs",
+              "RelativeDocumentMoniker": "Models\\PagamentoCartao.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\PagamentoCartao.cs",
+              "RelativeToolTip": "Models\\PagamentoCartao.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:14:26.676Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "Pagamento.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Pagamento.cs",
+              "RelativeDocumentMoniker": "Models\\Pagamento.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Pagamento.cs",
+              "RelativeToolTip": "Models\\Pagamento.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:13:39.245Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "Nivel.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Nivel.cs",
+              "RelativeDocumentMoniker": "Models\\Nivel.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Nivel.cs",
+              "RelativeToolTip": "Models\\Nivel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:13:26.844Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "Estacionamento.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Estacionamento.cs",
+              "RelativeDocumentMoniker": "Models\\Estacionamento.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Models\\Estacionamento.cs",
+              "RelativeToolTip": "Models\\Estacionamento.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:12:28.95Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "VagaService.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Services\\VagaService.cs",
+              "RelativeDocumentMoniker": "Services\\VagaService.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Services\\VagaService.cs",
+              "RelativeToolTip": "Services\\VagaService.cs",
+              "ViewState": "AgIAAGwAAAAAAAAAAAAmwHkAAABuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:04:04.121Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "JobsService.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Services\\JobsService.cs",
+              "RelativeDocumentMoniker": "Services\\JobsService.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Services\\JobsService.cs",
+              "RelativeToolTip": "Services\\JobsService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T16:00:26.406Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "EstacionamentoService.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Services\\EstacionamentoService.cs",
+              "RelativeDocumentMoniker": "Services\\EstacionamentoService.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Services\\EstacionamentoService.cs",
+              "RelativeToolTip": "Services\\EstacionamentoService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T15:56:37.858Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "BusinessException.cs",
+              "DocumentMoniker": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Exceptions\\BusinessException.cs",
+              "RelativeDocumentMoniker": "Exceptions\\BusinessException.cs",
+              "ToolTip": "C:\\Users\\gabri\\FIAP\\terceiro-semestre\\spint-1\\dotnet\\easypark-net\\Exceptions\\BusinessException.cs",
+              "RelativeToolTip": "Exceptions\\BusinessException.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T11:58:12.837Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
