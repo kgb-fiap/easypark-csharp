@@ -16,4 +16,9 @@ public class PagamentoPagador
 
     [Column("NOME")]
     public string? Nome { get; set; }
+
+    [Column("ENDERECO_ID")]
+    public long? EnderecoId { get; set; }
+
+    public Endereco? Endereco { get; set; }
 }

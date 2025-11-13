@@ -20,14 +20,10 @@ public class Estacionamento
     public string Nome { get; set; } = null!;
 
     [Required]
-    [Column("ENDERECO")]
-    public string Endereco { get; set; } = null!;
+    [Column("ENDERECO_ID")]
+    public long EnderecoId { get; set; }
 
-    [Column("LATITUDE")]
-    public decimal? Latitude { get; set; }
-
-    [Column("LONGITUDE")]
-    public decimal? Longitude { get; set; }
+    public Endereco Endereco { get; set; } = null!;
 
     [Column("CRIADO_EM")]
     public DateTimeOffset? CriadoEm { get; set; }
