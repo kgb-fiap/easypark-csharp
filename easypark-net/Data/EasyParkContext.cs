@@ -23,6 +23,10 @@ public class EasyParkContext : DbContext
     public DbSet<Pagamento> Pagamentos => Set<Pagamento>();
     public DbSet<PagamentoPagador> PagamentoPagadores => Set<PagamentoPagador>();
     public DbSet<PagamentoCartao> PagamentoCartoes => Set<PagamentoCartao>();
+    public DbSet<Uf> Ufs => Set<Uf>();
+    public DbSet<Cidade> Cidades => Set<Cidade>();
+    public DbSet<Bairro> Bairros => Set<Bairro>();
+    public DbSet<Endereco> Enderecos => Set<Endereco>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -35,6 +39,26 @@ public class EasyParkContext : DbContext
             // No Oracle as flags são armazenadas como CHAR(1) com Y/N.
             e.Property(x => x.Ativa).HasMaxLength(1).HasConversion(boolToYN);
             e.HasIndex(x => new { x.NivelId, x.Codigo }).IsUnique();
+        });
+
+        builder.Entity<Cidade>(e =>
+        {
+            e.HasOne(x => x.Uf).WithMany().HasForeignKey(x => x.UfSigla)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.Nome, x.UfSigla }).IsUnique();
+        });
+
+        builder.Entity<Bairro>(e =>
+        {
+            e.HasOne(x => x.Cidade).WithMany().HasForeignKey(x => x.CidadeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.Nome, x.CidadeId }).IsUnique();
+        });
+
+        builder.Entity<Endereco>(e =>
+        {
+            e.HasOne(x => x.Bairro).WithMany().HasForeignKey(x => x.BairroId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<TipoVaga>(e =>
@@ -59,6 +83,12 @@ public class EasyParkContext : DbContext
         builder.Entity<Reserva>(e =>
         {
             e.Property(x => x.VagaBloqueada).HasMaxLength(1).HasConversion(boolToYN);
+        });
+
+        builder.Entity<Estacionamento>(e =>
+        {
+            e.HasOne(x => x.Endereco).WithMany().HasForeignKey(x => x.EnderecoId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Relacionamento 1:1 entre Vaga e VagaStatus (mesma chave).
@@ -87,6 +117,8 @@ public class EasyParkContext : DbContext
         {
             e.HasOne<Pagamento>().WithOne().HasForeignKey<PagamentoPagador>(x => x.PagamentoId)
                 .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Endereco).WithMany().HasForeignKey(x => x.EnderecoId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<PagamentoCartao>(e =>
