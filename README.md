@@ -133,3 +133,11 @@ O repositório inclui uma coleção Postman (`EasyPark.postman_collection.json`)
 1. **Importe** ambos os arquivos no Postman.
 2. **Configure** a variável `{{baseUrl}}` do environment com a URL local da API (por exemplo `http://localhost:5190`).
 3. Para chamadas que dependem de IDs (estacionamento, vaga, reserva), utilize as variáveis `{{estacionamentoId}}`, `{{vagaId}}` e `{{reservaId}}` no environment; atualize‑as após cada criação.
+
+---
+
+## Integrantes
+
+- **Gabriel Cruz Ferreira** — RM559613  
+- **Kauã Ferreira dos Santos** — RM560992  
+- **Vinicius da Silva Bitú** — RM560227  
