@@ -12,7 +12,8 @@
 - **Sensores e Telemetria**: Cada vaga pode ter um sensor que transmite eventos de ocupação (*OCUPADA*, *LIVRE* ou *DESCONHECIDO*).  Uma trigger no Oracle atualiza a tabela de cache `VAGA_STATUS` e pode transitar uma reserva para **OCUPADA** quando um sensor reporta ocupação.
 - **Reservas em Etapas**: Usuários criam reservas informando antecedência desejada; a API calcula a janela de chegada permitida com base nas regras do estacionamento.  Quando o ETA se aproxima (via integração externa), o sistema bloqueia a vaga e transita de **PRE_RESERVA** para **RESERVA**.  O sensor confirma a presença e muda para **OCUPADA**.  Após a liberação da vaga, o pagamento é iniciado e, quando concluído, a reserva passa para **PAGA**.  Timeouts automáticos cancelam reservas ou pré‑reservas fora da janela permitida.
 - **Pagamentos**: Integração com provedores de pagamento permite cobrar o valor final com idempotência e armazenar informações do pagador e cartão de forma segregada.  O `PagamentoPagador` tem relação opcional com `Endereço`, permitindo registrar dados de cobrança.
-
+- **Busca Paginada + HATEOAS**: Estacionamentos e Vagas possuem rotas `/search` com filtros de domínio, paginação configurável e ordenação.  As respostas dos endpoints de detalhe retornam envelopes HATEOAS com links de `self`, `update`, `delete` e demais ações relacionadas.
+- **CRUD exposto para Reservas e Pagamentos**: Além dos jobs e do monitoramento por sensores, a sprint atual disponibiliza controladores e serviços completos para criar, buscar, atualizar e remover reservas, assim como registrar pagamentos com dados de pagador/cartão.
 ## Arquitetura da Solução
 
 O projeto segue uma arquitetura em camadas, com separação de responsabilidades:
@@ -85,6 +86,7 @@ O modelo de dados está normalizado e abrange operações de estacionamento, res
 | **GET** | `/api/estacionamentos/{id}` | Retorna detalhes de um estacionamento específico |
 | **PUT** | `/api/estacionamentos/{id}` | Atualiza dados e endereço do estacionamento |
 | **DELETE** | `/api/estacionamentos/{id}` | Remove um estacionamento (erros podem ocorrer se houver níveis/vagas associados) |
+| **GET** | `/api/estacionamentos/search` | Busca paginada com filtros por nome, UF, cidade e bairro (resposta HATEOAS) |
 | **POST** | `/api/vagas` | Cria uma vaga em um nível e tipo específicos |
 | **GET** | `/api/vagas` | Lista vagas, com filtro opcional por status (LIVRE, OCUPADA, DESCONHECIDO) |
 | **GET** | `/api/vagas/{id}` | Detalhes de uma vaga |
@@ -92,6 +94,15 @@ O modelo de dados está normalizado e abrange operações de estacionamento, res
 | **DELETE** | `/api/vagas/{id}` | Remove a vaga |
 | **GET** | `/api/vagas/{id}/status` | Obtém o status atual da vaga (cache) |
 | **GET** | `/estacionamentos/{estacionamentoId}/vagas` | Lista vagas de um estacionamento específico |
+| **GET** | `/api/vagas/search` | Busca paginada com filtros por estacionamento, nível, tipo, status e código |
+| **POST** | `/api/reservas` | Cria uma reserva em estado inicial (ex.: PRE_RESERVA) |
+| **GET** | `/api/reservas/{id}` | Recupera uma reserva específica |
+| **GET** | `/api/reservas/search` | Pesquisa reservas por usuário, vaga, status e intervalo de datas |
+| **PUT** | `/api/reservas/{id}` | Atualiza datas, status ou valores da reserva |
+| **DELETE** | `/api/reservas/{id}` | Cancela/Remove a reserva quando aplicável |
+| **POST** | `/api/pagamentos` | Registra um pagamento associado a usuário/reserva com dados do pagador |
+| **GET** | `/api/pagamentos/{id}` | Retorna o pagamento criado, incluindo pagador e cartão |
+| **GET** | `/api/pagamentos/search` | Lista pagamentos filtrando por reserva, usuário, status ou método |
 | **POST** | `/api/jobs/reservas/timeouts` | Executa procedure que cancela reservas expiradas |
 | **POST** | `/api/jobs/prereservas/timeouts` | Executa procedure que cancela pré‑reservas expiradas |
 | **POST** | `/api/jobs/reservas/{id}/eta` | Atualiza o ETA de uma reserva específica (parâmetro `minutos`) |
@@ -132,7 +143,12 @@ O repositório inclui uma coleção Postman (`EasyPark_csharp.postman_collection
 
 1. **Importe** ambos os arquivos no Postman.
 2. **Configure** a variável `{{baseUrl}}` do environment com a URL local da API (por exemplo `http://localhost:5190`).
-3. Para chamadas que dependem de IDs (estacionamento, vaga, reserva), utilize as variáveis `{{estacionamentoId}}`, `{{vagaId}}` e `{{reservaId}}` no environment; atualize‑as após cada criação.
+3. Atualize as variáveis de IDs (`{{estacionamentoId}}`, `{{vagaId}}`, `{{reservaId}}`, `{{pagamentoId}}`) após cada criação. Há também valores auxiliares (`{{usuarioId}}`, `{{pagamentoValor}}`, `{{pagamentoStatus}}`, `{{status}}`, `{{minutos}}`) para acelerar os testes.
+4. Cada pasta da coleção contém exemplos completos:
+   - **Estacionamentos** e **Vagas**: CRUD + rotas `/search` já preenchidas com filtros de paginação/ordenação.
+   - **Reservas**: criação, consulta, busca paginada, atualização e cancelamento.
+   - **Pagamentos**: criação com pagador/cartão aninhados, consulta e search com filtros.
+   - **Jobs**: chamadas às procedures de timeout e atualização de ETA.
 
 ---
 
