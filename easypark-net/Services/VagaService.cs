@@ -61,7 +61,72 @@ public class VagaService
         return list.Select(v => new VagaOutDto(v.Id, v.Codigo, v.Ativa, v.NivelId, v.TipoVagaId));
     }
 
-    
+    public async Task<PagedResultDto<VagaOutDto>> SearchAsync(
+        int page,
+        int pageSize,
+        string? sortBy,
+        string? sortDir,
+        long? estacionamentoId,
+        long? nivelId,
+        long? tipoVagaId,
+        string? status,
+        string? codigo)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
+        sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
+
+        var query = from v in _context.Vagas.AsNoTracking()
+                    join n in _context.Niveis.AsNoTracking() on v.NivelId equals n.Id
+                    join t in _context.TiposVaga.AsNoTracking() on v.TipoVagaId equals t.Id
+                    join vs in _context.VagaStatus.AsNoTracking() on v.Id equals vs.VagaId into statusGroup
+                    from vs in statusGroup.DefaultIfEmpty()
+                    select new VagaSearchProjection(v, n, t, vs);
+
+        if (estacionamentoId.HasValue)
+        {
+            query = query.Where(x => x.Nivel.EstacionamentoId == estacionamentoId.Value);
+        }
+
+        if (nivelId.HasValue)
+        {
+            query = query.Where(x => x.Vaga.NivelId == nivelId.Value);
+        }
+
+        if (tipoVagaId.HasValue)
+        {
+            query = query.Where(x => x.Vaga.TipoVagaId == tipoVagaId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            var statusFilter = status.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Status != null && x.Status.StatusOcupacao != null && x.Status.StatusOcupacao.ToUpper() == statusFilter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(codigo))
+        {
+            var codigoFilter = codigo.Trim().ToUpperInvariant();
+            query = query.Where(x => x.Vaga.Codigo.ToUpper().Contains(codigoFilter));
+        }
+
+        query = ApplyOrdering(query, sortBy, sortDir);
+
+        var totalItems = await query.LongCountAsync();
+        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        var vagas = await query.Skip((page - 1) * pageSize).Take(pageSize).Select(x => x.Vaga).ToListAsync();
+
+        return new PagedResultDto<VagaOutDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            Items = vagas.Select(v => new VagaOutDto(v.Id, v.Codigo, v.Ativa, v.NivelId, v.TipoVagaId)).ToList()
+        };
+    }
+
+
     /// Retorna os dados de uma vaga pelo identificador. Lança EntityNotFoundException se a vaga não existir.
     public async Task<VagaOutDto> FindByIdAsync(long id)
     {
@@ -128,4 +193,24 @@ public class VagaService
                     select new VagaOutDto(v.Id, v.Codigo, v.Ativa, v.NivelId, v.TipoVagaId);
         return await query.ToListAsync();
     }
+    private static IQueryable<VagaSearchProjection> ApplyOrdering(IQueryable<VagaSearchProjection> query, string? sortBy, string sortDir)
+    {
+        var ascending = sortDir != "desc";
+        var key = string.IsNullOrWhiteSpace(sortBy) ? "codigo" : sortBy.Trim().ToLowerInvariant();
+
+        return key switch
+        {
+            "nivel" => ascending
+                ? query.OrderBy(x => x.Nivel.Nome)
+                : query.OrderByDescending(x => x.Nivel.Nome),
+            "tipo" => ascending
+                ? query.OrderBy(x => x.Tipo.Nome)
+                : query.OrderByDescending(x => x.Tipo.Nome),
+            _ => ascending
+                ? query.OrderBy(x => x.Vaga.Codigo)
+                : query.OrderByDescending(x => x.Vaga.Codigo)
+        };
+    }
+
+    private record VagaSearchProjection(Vaga Vaga, Nivel Nivel, TipoVaga Tipo, VagaStatus? Status);
 }

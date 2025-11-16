@@ -2,36 +2,130 @@
   "info": {
     "name": "EasyPark .NET API",
     "_postman_id": "4bf467c4-3ef0-4e5f-90fa-f2653bea8b45",
-    "description": "Coleção de testes para a API .NET do EasyPark com a nova modelagem de endereços.\n\nEsta coleção contém requests para cadastrar, listar, atualizar e remover estacionamentos, incluindo o envio de endereço completo (UF, cidade, bairro, CEP, logradouro, número, complemento e coordenadas). Também inclui operações para gerenciar vagas e executar jobs de timeouts, mantendo compatibilidade com as versões anteriores.",
+    "description": "Coleção de testes para a API .NET do EasyPark com busca paginada, respostas HATEOAS e os domínios principais (Estacionamentos, Vagas, Reservas e Pagamentos).\n\nCada pasta contém exemplos de criação, leitura, atualização e, quando aplicável, rotas de search que aceitam paginação (`page`, `pageSize`), ordenação (`sortBy`, `sortDir`) e filtros específicos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:5190" },
-    { "key": "operadoraId", "value": 1 },
-    { "key": "estacionamentoId", "value": "" },
-    { "key": "estacionamentoNome", "value": "Estacionamento Central" },
-    { "key": "esperaMinutos", "value": 10 },
-    { "key": "toleranciaMinutos", "value": 5 },
-    { "key": "limiteNoShow", "value": 3 },
-    { "key": "maxAntecedenciaMinutos", "value": 60 },
-    { "key": "maxAntecedenciaMinutosSuspenso", "value": 120 },
-    { "key": "ufSigla", "value": "SP" },
-    { "key": "cidadeNome", "value": "São Paulo" },
-    { "key": "bairroNome", "value": "Centro" },
-    { "key": "cep", "value": "01000-000" },
-    { "key": "logradouro", "value": "Av. Paulista" },
-    { "key": "numero", "value": "1000" },
-    { "key": "complemento", "value": "Apto. 101" },
-    { "key": "latitude", "value": -23.56199 },
-    { "key": "longitude", "value": -46.65675 },
-    { "key": "tipoVagaId", "value": 1 },
-    { "key": "nivelId", "value": 1 },
-    { "key": "vagaCodigo", "value": "A1" },
-    { "key": "vagaAtiva", "value": true },
-    { "key": "vagaId", "value": "" },
-    { "key": "status", "value": "" },
-    { "key": "reservaId", "value": "" },
-    { "key": "minutos", "value": 10 }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5190"
+    },
+    {
+      "key": "operadoraId",
+      "value": 1
+    },
+    {
+      "key": "estacionamentoId",
+      "value": ""
+    },
+    {
+      "key": "estacionamentoNome",
+      "value": "Estacionamento Central"
+    },
+    {
+      "key": "esperaMinutos",
+      "value": 10
+    },
+    {
+      "key": "toleranciaMinutos",
+      "value": 5
+    },
+    {
+      "key": "limiteNoShow",
+      "value": 3
+    },
+    {
+      "key": "maxAntecedenciaMinutos",
+      "value": 60
+    },
+    {
+      "key": "maxAntecedenciaMinutosSuspenso",
+      "value": 120
+    },
+    {
+      "key": "ufSigla",
+      "value": "SP"
+    },
+    {
+      "key": "cidadeNome",
+      "value": "São Paulo"
+    },
+    {
+      "key": "bairroNome",
+      "value": "Centro"
+    },
+    {
+      "key": "cep",
+      "value": "01000-000"
+    },
+    {
+      "key": "logradouro",
+      "value": "Av. Paulista"
+    },
+    {
+      "key": "numero",
+      "value": "1000"
+    },
+    {
+      "key": "complemento",
+      "value": "Apto. 101"
+    },
+    {
+      "key": "latitude",
+      "value": -23.56199
+    },
+    {
+      "key": "longitude",
+      "value": -46.65675
+    },
+    {
+      "key": "tipoVagaId",
+      "value": 1
+    },
+    {
+      "key": "nivelId",
+      "value": 1
+    },
+    {
+      "key": "vagaCodigo",
+      "value": "A1"
+    },
+    {
+      "key": "vagaAtiva",
+      "value": true
+    },
+    {
+      "key": "vagaId",
+      "value": ""
+    },
+    {
+      "key": "status",
+      "value": ""
+    },
+    {
+      "key": "reservaId",
+      "value": ""
+    },
+    {
+      "key": "minutos",
+      "value": 10
+    },
+    {
+      "key": "usuarioId",
+      "value": 1
+    },
+    {
+      "key": "pagamentoId",
+      "value": ""
+    },
+    {
+      "key": "pagamentoValor",
+      "value": 25
+    },
+    {
+      "key": "pagamentoStatus",
+      "value": "PENDENTE"
+    }
   ],
   "item": [
     {
@@ -71,8 +165,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/estacionamentos",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "estacionamentos"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estacionamentos"
+              ]
             }
           }
         },
@@ -83,8 +182,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/estacionamentos/{{estacionamentoId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "estacionamentos", "{{estacionamentoId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estacionamentos",
+                "{{estacionamentoId}}"
+              ]
             }
           }
         },
@@ -105,8 +210,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/estacionamentos/{{estacionamentoId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "estacionamentos", "{{estacionamentoId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estacionamentos",
+                "{{estacionamentoId}}"
+              ]
             }
           }
         },
@@ -117,9 +228,76 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/estacionamentos/{{estacionamentoId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "estacionamentos", "{{estacionamentoId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estacionamentos",
+                "{{estacionamentoId}}"
+              ]
             }
+          }
+        },
+        {
+          "name": "Buscar Estacionamentos (Search)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estacionamentos/search?page=1&pageSize=10&sortBy=nome&sortDir=asc&nome={{estacionamentoNome}}&ufSigla={{ufSigla}}&cidadeNome={{cidadeNome}}&bairroNome={{bairroNome}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estacionamentos",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Página atual (min 1)."
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10",
+                  "description": "Itens por página (máx 100)."
+                },
+                {
+                  "key": "sortBy",
+                  "value": "nome",
+                  "description": "Coluna para ordenação (nome, ufSigla, cidadeNome)."
+                },
+                {
+                  "key": "sortDir",
+                  "value": "asc",
+                  "description": "Direção da ordenação (asc/desc)."
+                },
+                {
+                  "key": "nome",
+                  "value": "{{estacionamentoNome}}",
+                  "description": "Filtro parcial pelo nome."
+                },
+                {
+                  "key": "ufSigla",
+                  "value": "{{ufSigla}}",
+                  "description": "Filtro exato por UF."
+                },
+                {
+                  "key": "cidadeNome",
+                  "value": "{{cidadeNome}}",
+                  "description": "Filtro parcial por cidade."
+                },
+                {
+                  "key": "bairroNome",
+                  "value": "{{bairroNome}}",
+                  "description": "Filtro parcial por bairro."
+                }
+              ]
+            },
+            "description": "Busca paginada com filtros combináveis para estacionamentos."
           }
         }
       ]
@@ -144,8 +322,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/vagas",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vagas"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vagas"
+              ]
             }
           }
         },
@@ -156,8 +339,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/vagas",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vagas"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vagas"
+              ],
               "query": [
                 {
                   "key": "status",
@@ -175,8 +363,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/vagas/{{vagaId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vagas", "{{vagaId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "{{vagaId}}"
+              ]
             }
           }
         },
@@ -197,8 +391,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/vagas/{{vagaId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vagas", "{{vagaId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "{{vagaId}}"
+              ]
             }
           }
         },
@@ -209,8 +409,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/vagas/{{vagaId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vagas", "{{vagaId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "{{vagaId}}"
+              ]
             }
           }
         },
@@ -221,8 +427,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/vagas/{{vagaId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vagas", "{{vagaId}}", "status"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "{{vagaId}}",
+                "status"
+              ]
             }
           }
         },
@@ -233,9 +446,78 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/estacionamentos/{{estacionamentoId}}/vagas",
-              "host": ["{{baseUrl}}"],
-              "path": ["estacionamentos", "{{estacionamentoId}}", "vagas"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "estacionamentos",
+                "{{estacionamentoId}}",
+                "vagas"
+              ]
             }
+          }
+        },
+        {
+          "name": "Buscar Vagas (Search)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vagas/search?page=1&pageSize=10&sortBy=codigo&sortDir=asc&estacionamentoId={{estacionamentoId}}&nivelId={{nivelId}}&tipoVagaId={{tipoVagaId}}&status={{status}}&codigo={{vagaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "vagas",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "codigo",
+                  "description": "Ordenar por código, nível ou tipo."
+                },
+                {
+                  "key": "sortDir",
+                  "value": "asc"
+                },
+                {
+                  "key": "estacionamentoId",
+                  "value": "{{estacionamentoId}}",
+                  "description": "Filtra vagas de um estacionamento específico."
+                },
+                {
+                  "key": "nivelId",
+                  "value": "{{nivelId}}",
+                  "description": "Filtra por nível."
+                },
+                {
+                  "key": "tipoVagaId",
+                  "value": "{{tipoVagaId}}",
+                  "description": "Filtra por tipo de vaga."
+                },
+                {
+                  "key": "status",
+                  "value": "{{status}}",
+                  "description": "Filtra pelo status atual da vaga."
+                },
+                {
+                  "key": "codigo",
+                  "value": "{{vagaCodigo}}",
+                  "description": "Busca por parte do código."
+                }
+              ]
+            },
+            "description": "Busca paginada de vagas com filtros de estacionamento, nível, tipo, status e código."
           }
         }
       ]
@@ -250,8 +532,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/reservas/timeouts",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "reservas", "timeouts"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "reservas",
+                "timeouts"
+              ]
             }
           }
         },
@@ -262,8 +551,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/prereservas/timeouts",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "prereservas", "timeouts"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "prereservas",
+                "timeouts"
+              ]
             }
           }
         },
@@ -274,12 +570,283 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/reservas/{{reservaId}}/eta?minutos={{minutos}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "jobs", "reservas", "{{reservaId}}", "eta"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jobs",
+                "reservas",
+                "{{reservaId}}",
+                "eta"
+              ],
               "query": [
                 {
                   "key": "minutos",
                   "value": "{{minutos}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservas",
+      "item": [
+        {
+          "name": "Criar Reserva",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioId}},\n  \"vagaId\": {{vagaId}},\n  \"status\": \"PRE_RESERVA\",\n  \"dataInicio\": \"2024-05-01T10:00:00-03:00\",\n  \"eta\": \"2024-05-01T10:20:00-03:00\",\n  \"vagaBloqueada\": false,\n  \"valorPrevisto\": 25.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Reserva por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/{{reservaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{reservaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Reservas (Search)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/search?page=1&pageSize=10&sortBy=dataInicio&sortDir=desc&usuarioId={{usuarioId}}&vagaId={{vagaId}}&status={{status}}&dataInicioDe=2024-01-01T00:00:00Z&dataInicioAte=2024-12-31T23:59:59Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "dataInicio"
+                },
+                {
+                  "key": "sortDir",
+                  "value": "desc"
+                },
+                {
+                  "key": "usuarioId",
+                  "value": "{{usuarioId}}",
+                  "description": "Filtra reservas de um usuário."
+                },
+                {
+                  "key": "vagaId",
+                  "value": "{{vagaId}}",
+                  "description": "Filtra por vaga."
+                },
+                {
+                  "key": "status",
+                  "value": "{{status}}",
+                  "description": "Filtra pelo status atual da reserva."
+                },
+                {
+                  "key": "dataInicioDe",
+                  "value": "2024-01-01T00:00:00Z",
+                  "description": "Filtro inicial por data de início."
+                },
+                {
+                  "key": "dataInicioAte",
+                  "value": "2024-12-31T23:59:59Z",
+                  "description": "Filtro final por data de início."
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Reserva",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": {{usuarioId}},\n  \"vagaId\": {{vagaId}},\n  \"status\": \"RESERVA\",\n  \"dataInicio\": \"2024-05-01T10:00:00-03:00\",\n  \"dataFim\": \"2024-05-01T12:00:00-03:00\",\n  \"eta\": \"2024-05-01T10:20:00-03:00\",\n  \"vagaBloqueada\": true,\n  \"valorPrevisto\": 25.0,\n  \"valorFinal\": 42.5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/{{reservaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{reservaId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar/Excluir Reserva",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reservas/{{reservaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reservas",
+                "{{reservaId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagamentos",
+      "item": [
+        {
+          "name": "Criar Pagamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservaId\": {{reservaId}},\n  \"usuarioId\": {{usuarioId}},\n  \"valor\": {{pagamentoValor}},\n  \"status\": \"{{pagamentoStatus}}\",\n  \"idempotenciaChave\": \"pag-{{reservaId}}-1\",\n  \"pagador\": {\n    \"cpfCnpj\": \"12345678901\",\n    \"nome\": \"Usuário EasyPark\",\n    \"endereco\": {\n      \"ufSigla\": \"SP\",\n      \"cidadeNome\": \"São Paulo\",\n      \"bairroNome\": \"Centro\",\n      \"cep\": \"01000-000\",\n      \"logradouro\": \"Av. Paulista\",\n      \"numero\": \"1000\"\n    }\n  },\n  \"cartao\": {\n    \"titular\": \"Usuário EasyPark\",\n    \"bandeira\": \"VISA\",\n    \"ultimosDigitos\": \"4242\",\n    \"transacaoId\": \"TRX-123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pagamentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagamentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Pagamento por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagamentos/{{pagamentoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagamentos",
+                "{{pagamentoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Pagamentos (Search)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pagamentos/search?page=1&pageSize=10&sortBy=criadoEm&sortDir=desc&reservaId={{reservaId}}&usuarioId={{usuarioId}}&status={{pagamentoStatus}}&metodo=cartao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pagamentos",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "criadoEm"
+                },
+                {
+                  "key": "sortDir",
+                  "value": "desc"
+                },
+                {
+                  "key": "reservaId",
+                  "value": "{{reservaId}}",
+                  "description": "Filtra pagamentos por reserva."
+                },
+                {
+                  "key": "usuarioId",
+                  "value": "{{usuarioId}}",
+                  "description": "Filtra pagamentos por usuário."
+                },
+                {
+                  "key": "status",
+                  "value": "{{pagamentoStatus}}",
+                  "description": "Filtra pelo status do pagamento."
+                },
+                {
+                  "key": "metodo",
+                  "value": "cartao",
+                  "description": "Método utilizado (ex.: cartao)."
                 }
               ]
             }

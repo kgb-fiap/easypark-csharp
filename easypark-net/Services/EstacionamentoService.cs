@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -51,6 +52,62 @@ public class EstacionamentoService
         return list.Select(MapToDto);
     }
 
+    public async Task<PagedResultDto<EstacionamentoOutDto>> SearchAsync(
+        int page,
+        int pageSize,
+        string? sortBy,
+        string? sortDir,
+        string? nome,
+        string? ufSigla,
+        string? cidadeNome,
+        string? bairroNome)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
+        sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
+
+        IQueryable<Estacionamento> query = WithEndereco(_context.Estacionamentos.AsNoTracking());
+
+        if (!string.IsNullOrWhiteSpace(nome))
+        {
+            var filter = nome.Trim().ToUpperInvariant();
+            query = query.Where(e => e.Nome.ToUpper().Contains(filter));
+        }
+
+        if (!string.IsNullOrWhiteSpace(ufSigla))
+        {
+            var sigla = ufSigla.Trim().ToUpperInvariant();
+            query = query.Where(e => e.Endereco != null && e.Endereco.Bairro != null && e.Endereco.Bairro.Cidade != null && e.Endereco.Bairro.Cidade.Uf != null && e.Endereco.Bairro.Cidade.Uf.Sigla == sigla);
+        }
+
+        if (!string.IsNullOrWhiteSpace(cidadeNome))
+        {
+            var cidadeFilter = cidadeNome.Trim().ToUpperInvariant();
+            query = query.Where(e => e.Endereco != null && e.Endereco.Bairro != null && e.Endereco.Bairro.Cidade != null && e.Endereco.Bairro.Cidade.Nome.ToUpper().Contains(cidadeFilter));
+        }
+
+        if (!string.IsNullOrWhiteSpace(bairroNome))
+        {
+            var bairroFilter = bairroNome.Trim().ToUpperInvariant();
+            query = query.Where(e => e.Endereco != null && e.Endereco.Bairro != null && e.Endereco.Bairro.Nome.ToUpper().Contains(bairroFilter));
+        }
+
+        query = ApplyOrdering(query, sortBy, sortDir);
+
+        var totalItems = await query.LongCountAsync();
+        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+        return new PagedResultDto<EstacionamentoOutDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            Items = items.Select(MapToDto).ToList()
+        };
+    }
+
     public async Task<EstacionamentoOutDto> FindByIdAsync(long id)
     {
         var est = await WithEndereco(_context.Estacionamentos.AsNoTracking())
@@ -89,6 +146,24 @@ public class EstacionamentoService
                 .ThenInclude(e => e!.Bairro)
                     .ThenInclude(b => b!.Cidade)
                         .ThenInclude(c => c!.Uf);
+    }
+    private static IQueryable<Estacionamento> ApplyOrdering(IQueryable<Estacionamento> query, string? sortBy, string sortDir)
+    {
+        var ascending = sortDir != "desc";
+        var key = string.IsNullOrWhiteSpace(sortBy) ? "nome" : sortBy.Trim().ToLowerInvariant();
+
+        return key switch
+        {
+            "ufsla" or "ufsigla" => ascending
+                ? query.OrderBy(e => e.Endereco!.Bairro!.Cidade!.Uf!.Sigla ?? string.Empty)
+                : query.OrderByDescending(e => e.Endereco!.Bairro!.Cidade!.Uf!.Sigla ?? string.Empty),
+            "cidadenome" or "cidade" => ascending
+                ? query.OrderBy(e => e.Endereco!.Bairro!.Cidade!.Nome ?? string.Empty)
+                : query.OrderByDescending(e => e.Endereco!.Bairro!.Cidade!.Nome ?? string.Empty),
+            _ => ascending
+                ? query.OrderBy(e => e.Nome)
+                : query.OrderByDescending(e => e.Nome)
+        };
     }
 
     private async Task<Endereco> UpsertEnderecoAsync(EnderecoInDto dto, Endereco? endereco = null)

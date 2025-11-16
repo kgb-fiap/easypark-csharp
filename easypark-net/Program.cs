@@ -17,6 +17,8 @@ builder.Services.AddDbContext<EasyParkContext>(options =>
 // Registro dos serviços de aplicação. 
 builder.Services.AddScoped<VagaService>();
 builder.Services.AddScoped<EstacionamentoService>();
+builder.Services.AddScoped<ReservaService>();
+builder.Services.AddScoped<PagamentoService>();
 builder.Services.AddScoped<JobsService>();
 
 // Configura os controllers, adicionando um filtro global para tratamento de exceções e customiza a resposta de validação
