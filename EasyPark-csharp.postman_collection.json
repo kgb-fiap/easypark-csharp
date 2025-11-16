@@ -1,0 +1,291 @@
+{
+  "info": {
+    "name": "EasyPark .NET API",
+    "_postman_id": "4bf467c4-3ef0-4e5f-90fa-f2653bea8b45",
+    "description": "Coleção de testes para a API .NET do EasyPark com a nova modelagem de endereços.\n\nEsta coleção contém requests para cadastrar, listar, atualizar e remover estacionamentos, incluindo o envio de endereço completo (UF, cidade, bairro, CEP, logradouro, número, complemento e coordenadas). Também inclui operações para gerenciar vagas e executar jobs de timeouts, mantendo compatibilidade com as versões anteriores.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5190" },
+    { "key": "operadoraId", "value": 1 },
+    { "key": "estacionamentoId", "value": "" },
+    { "key": "estacionamentoNome", "value": "Estacionamento Central" },
+    { "key": "esperaMinutos", "value": 10 },
+    { "key": "toleranciaMinutos", "value": 5 },
+    { "key": "limiteNoShow", "value": 3 },
+    { "key": "maxAntecedenciaMinutos", "value": 60 },
+    { "key": "maxAntecedenciaMinutosSuspenso", "value": 120 },
+    { "key": "ufSigla", "value": "SP" },
+    { "key": "cidadeNome", "value": "São Paulo" },
+    { "key": "bairroNome", "value": "Centro" },
+    { "key": "cep", "value": "01000-000" },
+    { "key": "logradouro", "value": "Av. Paulista" },
+    { "key": "numero", "value": "1000" },
+    { "key": "complemento", "value": "Apto. 101" },
+    { "key": "latitude", "value": -23.56199 },
+    { "key": "longitude", "value": -46.65675 },
+    { "key": "tipoVagaId", "value": 1 },
+    { "key": "nivelId", "value": 1 },
+    { "key": "vagaCodigo", "value": "A1" },
+    { "key": "vagaAtiva", "value": true },
+    { "key": "vagaId", "value": "" },
+    { "key": "status", "value": "" },
+    { "key": "reservaId", "value": "" },
+    { "key": "minutos", "value": 10 }
+  ],
+  "item": [
+    {
+      "name": "Estacionamentos",
+      "item": [
+        {
+          "name": "Criar Estacionamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operadoraId\": {{operadoraId}},\n  \"nome\": \"{{estacionamentoNome}}\",\n  \"esperaMinutos\": {{esperaMinutos}},\n  \"toleranciaMinutos\": {{toleranciaMinutos}},\n  \"limiteNoShow\": {{limiteNoShow}},\n  \"maxAntecedenciaMinutos\": {{maxAntecedenciaMinutos}},\n  \"maxAntecedenciaMinutosSuspenso\": {{maxAntecedenciaMinutosSuspenso}},\n  \"endereco\": {\n    \"ufSigla\": \"{{ufSigla}}\",\n    \"cidadeNome\": \"{{cidadeNome}}\",\n    \"bairroNome\": \"{{bairroNome}}\",\n    \"cep\": \"{{cep}}\",\n    \"logradouro\": \"{{logradouro}}\",\n    \"numero\": \"{{numero}}\",\n    \"complemento\": \"{{complemento}}\",\n    \"latitude\": {{latitude}},\n    \"longitude\": {{longitude}}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/estacionamentos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estacionamentos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar Estacionamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estacionamentos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estacionamentos"]
+            }
+          }
+        },
+        {
+          "name": "Obter Estacionamento por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estacionamentos/{{estacionamentoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estacionamentos", "{{estacionamentoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Estacionamento",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operadoraId\": {{operadoraId}},\n  \"nome\": \"{{estacionamentoNome}}\",\n  \"esperaMinutos\": {{esperaMinutos}},\n  \"toleranciaMinutos\": {{toleranciaMinutos}},\n  \"limiteNoShow\": {{limiteNoShow}},\n  \"maxAntecedenciaMinutos\": {{maxAntecedenciaMinutos}},\n  \"maxAntecedenciaMinutosSuspenso\": {{maxAntecedenciaMinutosSuspenso}},\n  \"endereco\": {\n    \"ufSigla\": \"{{ufSigla}}\",\n    \"cidadeNome\": \"{{cidadeNome}}\",\n    \"bairroNome\": \"{{bairroNome}}\",\n    \"cep\": \"{{cep}}\",\n    \"logradouro\": \"{{logradouro}}\",\n    \"numero\": \"{{numero}}\",\n    \"complemento\": \"{{complemento}}\",\n    \"latitude\": {{latitude}},\n    \"longitude\": {{longitude}}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/estacionamentos/{{estacionamentoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estacionamentos", "{{estacionamentoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Remover Estacionamento",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estacionamentos/{{estacionamentoId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estacionamentos", "{{estacionamentoId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vagas",
+      "item": [
+        {
+          "name": "Criar Vaga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nivelId\": {{nivelId}},\n  \"tipoVagaId\": {{tipoVagaId}},\n  \"codigo\": \"{{vagaCodigo}}\",\n  \"ativa\": {{vagaAtiva}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vagas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vagas"]
+            }
+          }
+        },
+        {
+          "name": "Listar Vagas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vagas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vagas"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "{{status}}",
+                  "description": "Filtrar vagas pelo status atual (LIVRE, OCUPADA, DESCONHECIDO)"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obter Vaga por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vagas/{{vagaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vagas", "{{vagaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Vaga",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nivelId\": {{nivelId}},\n  \"tipoVagaId\": {{tipoVagaId}},\n  \"codigo\": \"{{vagaCodigo}}\",\n  \"ativa\": {{vagaAtiva}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vagas/{{vagaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vagas", "{{vagaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Remover Vaga",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vagas/{{vagaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vagas", "{{vagaId}}"]
+            }
+          }
+        },
+        {
+          "name": "Obter Status da Vaga",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vagas/{{vagaId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vagas", "{{vagaId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Listar Vagas do Estacionamento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/estacionamentos/{{estacionamentoId}}/vagas",
+              "host": ["{{baseUrl}}"],
+              "path": ["estacionamentos", "{{estacionamentoId}}", "vagas"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "Timeout Reservas",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/reservas/timeouts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "reservas", "timeouts"]
+            }
+          }
+        },
+        {
+          "name": "Timeout Pré‑Reservas",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/prereservas/timeouts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "prereservas", "timeouts"]
+            }
+          }
+        },
+        {
+          "name": "Atualizar ETA da Reserva",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jobs/reservas/{{reservaId}}/eta?minutos={{minutos}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jobs", "reservas", "{{reservaId}}", "eta"],
+              "query": [
+                {
+                  "key": "minutos",
+                  "value": "{{minutos}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
