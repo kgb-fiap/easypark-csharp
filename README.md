@@ -128,7 +128,7 @@ Outros endpoints (usuários, reservas, pagamentos) poderão ser expostos conform
 
 ## Coleção Postman
 
-O repositório inclui uma coleção Postman (`EasyPark_csharp.postman_collection.json`) e um ambiente (`EasyPark_csharp.postman_environment.json`) que facilitam a experimentação da API:
+O repositório inclui uma coleção Postman (`EasyPark_csharp.postman_collection.json`) e um ambiente (`EasyPark_Local_Dotnet.postman_environment.json`) que facilitam a experimentação da API:
 
 1. **Importe** ambos os arquivos no Postman.
 2. **Configure** a variável `{{baseUrl}}` do environment com a URL local da API (por exemplo `http://localhost:5190`).
