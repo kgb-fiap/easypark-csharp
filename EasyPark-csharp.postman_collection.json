@@ -125,6 +125,10 @@
     {
       "key": "pagamentoStatus",
       "value": "PENDENTE"
+    },
+    {
+      "key": "apiKey",
+      "value": "easypark-local-key"
     }
   ],
   "item": [
@@ -139,6 +143,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
                 "type": "text"
               }
             ],
@@ -162,7 +171,13 @@
           "name": "Listar Estacionamentos",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/estacionamentos",
               "host": [
@@ -179,7 +194,13 @@
           "name": "Obter Estacionamento por ID",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/estacionamentos/{{estacionamentoId}}",
               "host": [
@@ -201,6 +222,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
                 "type": "text"
               }
             ],
@@ -225,7 +251,13 @@
           "name": "Remover Estacionamento",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/estacionamentos/{{estacionamentoId}}",
               "host": [
@@ -243,7 +275,13 @@
           "name": "Buscar Estacionamentos (Search)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/estacionamentos/search?page=1&pageSize=10&sortBy=nome&sortDir=asc&nome={{estacionamentoNome}}&ufSigla={{ufSigla}}&cidadeNome={{cidadeNome}}&bairroNome={{bairroNome}}",
               "host": [
@@ -314,6 +352,11 @@
                 "key": "Content-Type",
                 "value": "application/json",
                 "type": "text"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -336,7 +379,13 @@
           "name": "Listar Vagas",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/vagas",
               "host": [
@@ -360,7 +409,13 @@
           "name": "Obter Vaga por ID",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/vagas/{{vagaId}}",
               "host": [
@@ -382,6 +437,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
                 "type": "text"
               }
             ],
@@ -406,7 +466,13 @@
           "name": "Remover Vaga",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/vagas/{{vagaId}}",
               "host": [
@@ -424,7 +490,13 @@
           "name": "Obter Status da Vaga",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/vagas/{{vagaId}}/status",
               "host": [
@@ -461,7 +533,13 @@
           "name": "Buscar Vagas (Search)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/vagas/search?page=1&pageSize=10&sortBy=codigo&sortDir=asc&estacionamentoId={{estacionamentoId}}&nivelId={{nivelId}}&tipoVagaId={{tipoVagaId}}&status={{status}}&codigo={{vagaCodigo}}",
               "host": [
@@ -529,7 +607,13 @@
           "name": "Timeout Reservas",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/reservas/timeouts",
               "host": [
@@ -548,7 +632,13 @@
           "name": "Timeout Pré‑Reservas",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/prereservas/timeouts",
               "host": [
@@ -567,7 +657,13 @@
           "name": "Atualizar ETA da Reserva",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/jobs/reservas/{{reservaId}}/eta?minutos={{minutos}}",
               "host": [
@@ -603,6 +699,11 @@
                 "key": "Content-Type",
                 "value": "application/json",
                 "type": "text"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -625,7 +726,13 @@
           "name": "Obter Reserva por ID",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/reservas/{{reservaId}}",
               "host": [
@@ -643,7 +750,13 @@
           "name": "Buscar Reservas (Search)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/reservas/search?page=1&pageSize=10&sortBy=dataInicio&sortDir=desc&usuarioId={{usuarioId}}&vagaId={{vagaId}}&status={{status}}&dataInicioDe=2024-01-01T00:00:00Z&dataInicioAte=2024-12-31T23:59:59Z",
               "host": [
@@ -709,6 +822,11 @@
                 "key": "Content-Type",
                 "value": "application/json",
                 "type": "text"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -732,7 +850,13 @@
           "name": "Cancelar/Excluir Reserva",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/reservas/{{reservaId}}",
               "host": [
@@ -760,6 +884,11 @@
                 "key": "Content-Type",
                 "value": "application/json",
                 "type": "text"
+              },
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -782,7 +911,13 @@
           "name": "Obter Pagamento por ID",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/pagamentos/{{pagamentoId}}",
               "host": [
@@ -800,7 +935,13 @@
           "name": "Buscar Pagamentos (Search)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/pagamentos/search?page=1&pageSize=10&sortBy=criadoEm&sortDir=desc&reservaId={{reservaId}}&usuarioId={{usuarioId}}&status={{pagamentoStatus}}&metodo=cartao",
               "host": [
@@ -848,6 +989,77 @@
                   "value": "cartao",
                   "description": "Método utilizado (ex.: cartao)."
                 }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monitoramento",
+      "item": [
+        {
+          "name": "Health Consolidado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Health Live",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/live",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "live"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Health Ready",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/ready",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "ready"
+              ]
+            }
+          }
+        },
+        {
+          "name": "M?tricas Prometheus",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "metrics"
               ]
             }
           }
