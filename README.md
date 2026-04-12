@@ -65,7 +65,15 @@ O modelo de dados está normalizado e abrange operações de estacionamento, res
    git clone https://github.com/seu-usuario/easypark-csharp.git
    cd easypark-csharp
    ```
-2. **Configurar a conexão**: edite `appsettings.json` e ajuste a chave `ConnectionStrings:Default` com a string de conexão Oracle (usuário, senha, host, serviço).  Os parâmetros `EsperaMinutos`, `ToleranciaMinutos` e outros limites têm valores padrão, mas podem ser ajustados conforme necessidade.
+2. **Configurar a conexão**: defina a string de conexão Oracle em uma variável de ambiente, sem versionar credenciais no repositório:
+   ```powershell
+   $env:ConnectionStrings__Default = "User Id=SEU_USUARIO;Password=SUA_SENHA;Data Source=HOST:PORTA/SERVICO"
+   ```
+   No Linux/macOS:
+   ```bash
+   export ConnectionStrings__Default="User Id=SEU_USUARIO;Password=SUA_SENHA;Data Source=HOST:PORTA/SERVICO"
+   ```
+   Os parâmetros `EsperaMinutos`, `ToleranciaMinutos` e outros limites têm valores padrão, mas podem ser ajustados conforme necessidade.
 3. **Restaurar dependências**:  
    ```bash
    dotnet restore
