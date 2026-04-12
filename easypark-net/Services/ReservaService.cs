@@ -5,6 +5,7 @@ using EasyPark.Api.Data;
 using EasyPark.Api.Dtos;
 using EasyPark.Api.Exceptions;
 using EasyPark.Api.Models;
+using EasyPark.Api.Observability;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasyPark.Api.Services;
@@ -21,6 +22,10 @@ public class ReservaService
 
     public async Task<ReservaOutDto> CreateAsync(ReservaInDto dto)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.Create");
+        activity?.SetTag("usuario.id", dto.UsuarioId);
+        activity?.SetTag("vaga.id", dto.VagaId);
+
         await EnsureRelacionamentosAsync(dto.UsuarioId, dto.VagaId);
 
         var reserva = new Reserva
@@ -43,6 +48,9 @@ public class ReservaService
 
     public async Task<ReservaOutDto> FindByIdAsync(long id)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.FindById");
+        activity?.SetTag("reserva.id", id);
+
         var reserva = await _context.Reservas.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id)
             ?? throw new EntityNotFoundException($"Reserva {id} não encontrada");
         return MapToDto(reserva);
@@ -59,6 +67,11 @@ public class ReservaService
         DateTimeOffset? dataInicioDe,
         DateTimeOffset? dataInicioAte)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.Search");
+        activity?.SetTag("page", page);
+        activity?.SetTag("page.size", pageSize);
+        activity?.SetTag("reserva.status", status);
+
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
         sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
@@ -109,6 +122,9 @@ public class ReservaService
 
     public async Task<ReservaOutDto> UpdateAsync(long id, ReservaInDto dto)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.Update");
+        activity?.SetTag("reserva.id", id);
+
         var reserva = await _context.Reservas.FirstOrDefaultAsync(r => r.Id == id)
             ?? throw new EntityNotFoundException($"Reserva {id} não encontrada");
 
@@ -130,6 +146,9 @@ public class ReservaService
 
     public async Task DeleteAsync(long id)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.Delete");
+        activity?.SetTag("reserva.id", id);
+
         var reserva = await _context.Reservas.FindAsync(id)
             ?? throw new EntityNotFoundException($"Reserva {id} não encontrada");
         _context.Reservas.Remove(reserva);

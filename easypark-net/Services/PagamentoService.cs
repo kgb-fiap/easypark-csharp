@@ -5,6 +5,7 @@ using EasyPark.Api.Data;
 using EasyPark.Api.Dtos;
 using EasyPark.Api.Exceptions;
 using EasyPark.Api.Models;
+using EasyPark.Api.Observability;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasyPark.Api.Services;
@@ -21,6 +22,11 @@ public class PagamentoService
 
     public async Task<PagamentoOutDto> CreateAsync(PagamentoInDto dto)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("PagamentoService.Create");
+        activity?.SetTag("reserva.id", dto.ReservaId);
+        activity?.SetTag("usuario.id", dto.UsuarioId);
+        activity?.SetTag("pagamento.valor", dto.Valor);
+
         if (dto.ReservaId.HasValue)
         {
             _ = await _context.Reservas.FindAsync(dto.ReservaId.Value)
@@ -85,6 +91,9 @@ public class PagamentoService
 
     public async Task<PagamentoOutDto> FindByIdAsync(long id)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("PagamentoService.FindById");
+        activity?.SetTag("pagamento.id", id);
+
         var pagamento = await _context.Pagamentos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id)
             ?? throw new EntityNotFoundException($"Pagamento {id} não encontrado");
 
@@ -110,6 +119,12 @@ public class PagamentoService
         string? status,
         string? metodo)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("PagamentoService.Search");
+        activity?.SetTag("page", page);
+        activity?.SetTag("page.size", pageSize);
+        activity?.SetTag("pagamento.status", status);
+        activity?.SetTag("pagamento.metodo", metodo);
+
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
         sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();

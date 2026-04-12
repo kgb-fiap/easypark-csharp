@@ -7,6 +7,7 @@ using EasyPark.Api.Data;
 using EasyPark.Api.Dtos;
 using EasyPark.Api.Exceptions;
 using EasyPark.Api.Models;
+using EasyPark.Api.Observability;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasyPark.Api.Services;
@@ -21,6 +22,10 @@ public class EstacionamentoService
 
     public async Task<EstacionamentoOutDto> CreateAsync(EstacionamentoInDto dto)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.Create");
+        activity?.SetTag("estacionamento.nome", dto.Nome);
+        activity?.SetTag("operadora.id", dto.OperadoraId);
+
         var enderecoDto = dto.Endereco ?? throw new ValidationException("Endereço é obrigatório");
         var endereco = await UpsertEnderecoAsync(enderecoDto);
 
@@ -48,6 +53,8 @@ public class EstacionamentoService
 
     public async Task<IEnumerable<EstacionamentoOutDto>> FindAllAsync()
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.FindAll");
+
         var list = await WithEndereco(_context.Estacionamentos.AsNoTracking()).ToListAsync();
         return list.Select(MapToDto);
     }
@@ -62,6 +69,11 @@ public class EstacionamentoService
         string? cidadeNome,
         string? bairroNome)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.Search");
+        activity?.SetTag("page", page);
+        activity?.SetTag("page.size", pageSize);
+        activity?.SetTag("estacionamento.nome", nome);
+
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
         sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
@@ -110,6 +122,9 @@ public class EstacionamentoService
 
     public async Task<EstacionamentoOutDto> FindByIdAsync(long id)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.FindById");
+        activity?.SetTag("estacionamento.id", id);
+
         var est = await WithEndereco(_context.Estacionamentos.AsNoTracking())
             .FirstOrDefaultAsync(e => e.Id == id)
             ?? throw new EntityNotFoundException($"Estacionamento {id} não encontrado");
@@ -118,6 +133,10 @@ public class EstacionamentoService
 
     public async Task<EstacionamentoOutDto> UpdateAsync(long id, EstacionamentoInDto dto)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.Update");
+        activity?.SetTag("estacionamento.id", id);
+        activity?.SetTag("estacionamento.nome", dto.Nome);
+
         var est = await WithEndereco(_context.Estacionamentos)
             .FirstOrDefaultAsync(e => e.Id == id)
             ?? throw new EntityNotFoundException($"Estacionamento {id} não encontrado");
@@ -133,6 +152,9 @@ public class EstacionamentoService
 
     public async Task DeleteAsync(long id)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.Delete");
+        activity?.SetTag("estacionamento.id", id);
+
         var est = await _context.Estacionamentos.FindAsync(id)
             ?? throw new EntityNotFoundException($"Estacionamento {id} não encontrado");
         _context.Estacionamentos.Remove(est);

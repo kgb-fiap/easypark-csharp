@@ -3,6 +3,7 @@ using System.Data;
 using System.Threading.Tasks;
 using EasyPark.Api.Data;
 using EasyPark.Api.Dtos;
+using EasyPark.Api.Observability;
 using Microsoft.EntityFrameworkCore;
 using Oracle.ManagedDataAccess.Client;
 
@@ -22,6 +23,8 @@ public class JobsService
     /// "reserva_timeouts". Retorna o número de reservas canceladas.    
     public async Task<JobCountOutDto> ReservaTimeoutsAsync()
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("JobsService.ReservaTimeouts");
+
         await using var conn = (OracleConnection)_context.Database.GetDbConnection();
         if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
@@ -41,6 +44,8 @@ public class JobsService
     /// pré-reservas canceladas.
     public async Task<JobCountOutDto> PreReservaTimeoutsAsync()
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("JobsService.PreReservaTimeouts");
+
         await using var conn = (OracleConnection)_context.Database.GetDbConnection();
         if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
@@ -60,6 +65,10 @@ public class JobsService
     /// status e a mensagem retornados pelo banco.    
     public async Task<EtaUpdateOutDto> AtualizarEtaAsync(long id, int minutos)
     {
+        using var activity = EasyParkTelemetry.ActivitySource.StartActivity("JobsService.AtualizarEta");
+        activity?.SetTag("reserva.id", id);
+        activity?.SetTag("eta.minutos", minutos);
+
         await using var conn = (OracleConnection)_context.Database.GetDbConnection();
         if (conn.State != ConnectionState.Open) await conn.OpenAsync();
 
