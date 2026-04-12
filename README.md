@@ -14,6 +14,8 @@
 - **Pagamentos**: Integração com provedores de pagamento permite cobrar o valor final com idempotência e armazenar informações do pagador e cartão de forma segregada.  O `PagamentoPagador` tem relação opcional com `Endereço`, permitindo registrar dados de cobrança.
 - **Busca Paginada + HATEOAS**: Estacionamentos e Vagas possuem rotas `/search` com filtros de domínio, paginação configurável e ordenação.  As respostas dos endpoints de detalhe retornam envelopes HATEOAS com links de `self`, `update`, `delete` e demais ações relacionadas.
 - **CRUD exposto para Reservas e Pagamentos**: Além dos jobs e do monitoramento por sensores, a sprint atual disponibiliza controladores e serviços completos para criar, buscar, atualizar e remover reservas, assim como registrar pagamentos com dados de pagador/cartão.
+- **Monitoramento e observabilidade**: A API possui health checks para liveness, readiness com Oracle e servico externo de ETA, logs estruturados com Serilog, correlacao por `X-Correlation-ID`, tracing com OpenTelemetry e metricas Prometheus em `/metrics`.
+- **Testes automatizados**: A solucao contem projetos separados para testes unitarios e de integracao com xUnit, seguindo o padrao AAA e usando `WebApplicationFactory` para validar fluxos HTTP.
 ## Arquitetura da Solução
 
 O projeto segue uma arquitetura em camadas, com separação de responsabilidades:
@@ -85,6 +87,41 @@ O modelo de dados está normalizado e abrange operações de estacionamento, res
    O Kestrel exibirá a URL base (por exemplo `http://localhost:5190`).  Utilize essa URL ao importar a coleção do Postman.
 5. **Documentação Swagger**: em ambiente de desenvolvimento, acesse `/swagger` para visualizar e testar os endpoints interativamente.
 
+### Autenticacao Local
+
+As rotas `/api/*` exigem API key no header `X-API-Key`. O valor padrao local em `appsettings.json` e `easypark-local-key`; em ambientes reais, sobrescreva por variavel de ambiente:
+
+```powershell
+$env:Authentication__ApiKey = "sua-chave"
+```
+
+As rotas `/health`, `/health/live`, `/health/ready`, `/metrics` e `/swagger` ficam publicas para monitoramento e documentacao.
+
+### Monitoramento e Observabilidade
+
+- `GET /health/live`: verifica se o processo da API esta respondendo.
+- `GET /health/ready`: verifica dependencias de prontidao, incluindo Oracle e a URL configurada em `ExternalServices:Eta:HealthUrl`.
+- `GET /health`: retorna um JSON consolidado com status, duracao e detalhes dos checks.
+- `GET /metrics`: expoe metricas Prometheus, incluindo duracao e status das requisicoes HTTP.
+- Logs estruturados sao escritos no console e em `logs/easypark-.log`, com rotacao diaria e propriedade `CorrelationId`.
+- Traces OpenTelemetry sao emitidos para console por padrao; se `OpenTelemetry:OtlpEndpoint` for configurado, a API tambem exporta via OTLP.
+
+### Execucao dos Testes
+
+Execute todos os testes:
+
+```bash
+dotnet test easypark-net/EasyPark.sln
+```
+
+Para coletar cobertura:
+
+```bash
+dotnet test easypark-net/EasyPark.sln --collect:"XPlat Code Coverage"
+```
+
+Os testes unitarios ficam em `easypark-net/tests/EasyPark.UnitTests` e os testes de integracao ficam em `easypark-net/tests/EasyPark.IntegrationTests`. Os testes de integracao usam SQLite em memoria para nao depender do Oracle real; o health check da aplicacao continua validando Oracle em runtime normal quando a connection string esta configurada.
+
 ## API Endpoints Principais
 
 | Método | Rota | Descrição resumida |
@@ -114,6 +151,10 @@ O modelo de dados está normalizado e abrange operações de estacionamento, res
 | **POST** | `/api/jobs/reservas/timeouts` | Executa procedure que cancela reservas expiradas |
 | **POST** | `/api/jobs/prereservas/timeouts` | Executa procedure que cancela pré‑reservas expiradas |
 | **POST** | `/api/jobs/reservas/{id}/eta` | Atualiza o ETA de uma reserva específica (parâmetro `minutos`) |
+| **GET** | `/health/live` | Liveness check da API |
+| **GET** | `/health/ready` | Readiness check com Oracle e servico externo |
+| **GET** | `/health` | Health check consolidado em JSON |
+| **GET** | `/metrics` | Metricas Prometheus |
 
 ### Exemplo de payload de criação ou atualização de Estacionamento
 
