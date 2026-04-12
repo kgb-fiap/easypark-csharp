@@ -4,12 +4,12 @@ namespace EasyPark.Api.Dtos;
 
 public record EnderecoInDto(
     string? Cep,
-    [property: Required] string Logradouro,
+    [Required] string Logradouro,
     string? Numero,
     string? Complemento,
-    [property: Required] string Bairro,
-    [property: Required] string Cidade,
-    [property: Required, StringLength(2, MinimumLength = 2)] string Uf,
+    [Required] string Bairro,
+    [Required] string Cidade,
+    [Required, StringLength(2, MinimumLength = 2)] string Uf,
     string? UfNome,
     decimal? Latitude,
     decimal? Longitude);

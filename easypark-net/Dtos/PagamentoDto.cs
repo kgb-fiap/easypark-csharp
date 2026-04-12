@@ -5,7 +5,7 @@ namespace EasyPark.Api.Dtos;
 public record PagamentoInDto(
     long? ReservaId,
     long? UsuarioId,
-    [property: Required] decimal Valor,
+    [Required] decimal Valor,
     string? Status,
     string? IdempotenciaChave,
     PagamentoPagadorInDto? Pagador,
@@ -23,7 +23,7 @@ public record PagamentoOutDto(
     PagamentoCartaoOutDto? Cartao);
 
 public record PagamentoPagadorInDto(
-    [property: Required] string CpfCnpj,
+    [Required] string CpfCnpj,
     string? Nome,
     EnderecoInDto? Endereco);
 
@@ -33,10 +33,10 @@ public record PagamentoPagadorOutDto(
     EnderecoOutDto? Endereco);
 
 public record PagamentoCartaoInDto(
-    [property: Required] string Titular,
-    [property: Required] string Bandeira,
-    [property: Required] string UltimosDigitos,
-    [property: Required] string TransacaoId);
+    [Required] string Titular,
+    [Required] string Bandeira,
+    [Required] string UltimosDigitos,
+    [Required] string TransacaoId);
 
 public record PagamentoCartaoOutDto(
     string Titular,

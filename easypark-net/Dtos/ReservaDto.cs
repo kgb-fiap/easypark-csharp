@@ -5,8 +5,8 @@ namespace EasyPark.Api.Dtos;
 
 // DTO de entrada para criação/atualização de reservas.
 public record ReservaInDto(
-    [property: Required] long UsuarioId,
-    [property: Required] long VagaId,
+    [Required] long UsuarioId,
+    [Required] long VagaId,
     string? Status,
     DateTimeOffset? DataInicio,
     DateTimeOffset? DataFim,

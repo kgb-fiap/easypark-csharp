@@ -4,9 +4,9 @@ namespace EasyPark.Api.Dtos;
 
 
 public record VagaInDto(
-    [property: Required] long NivelId,
-    [property: Required] long TipoVagaId,
-    [property: Required] string Codigo,
+    [Required] long NivelId,
+    [Required] long TipoVagaId,
+    [Required] string Codigo,
     bool Ativa);
 
 public record VagaOutDto(
