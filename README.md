@@ -1,208 +1,220 @@
+# EasyPark .NET API - Sprint 4
 
-# EasyPark .NET API
+## Integrantes
 
-## Visão Geral
+- Gabriel Cruz Ferreira — RM559613
+- Kauã Ferreira dos Santos — RM560992
+- Vinicius da Silva Bitú — RM560227
 
-**EasyPark** é uma API escrita em **ASP.NET Core** com **Entity Framework Core** que atende a um sistema de estacionamento multi-sítio.  A aplicação permite que usuários reservem vagas em diferentes estacionamentos, acompanhem o status em tempo real por sensores e realizem o pagamento após o uso.  O ciclo de vida da reserva passa por diversos estados – **PRE_RESERVA → RESERVA → OCUPADA → PAGA/CANCELADA** – enquanto um conjunto de procedimentos armazenados e *triggers* no banco de dados Oracle controlam etapas automatizadas como timeouts e confirmação de ocupação.  Além disso, o sistema integra-se a um serviço de ETA (via Google Maps Directions) para atualizar o tempo estimado de chegada e acionar transições de estado.
+## Visão geral
 
-## Principais Funcionalidades
+O **EasyPark** é uma API REST em **ASP.NET Core 8** para gestão de estacionamentos, vagas, reservas, pagamentos e jobs operacionais.  
+Nesta entrega do sprint 4 o projeto foi consolidado com:
 
- - **Gestão de Estacionamentos**: Operadoras podem cadastrar estacionamentos com parâmetros como tempo de espera, tolerância de atraso, limites de antecedência e restrições de no‑show.  **A criação ou atualização exige o envio de um endereço completo em um objeto aninhado (`endereco`) contendo a hierarquia UF → Cidade → Bairro → Endereço; a API cria ou atualiza essa hierarquia automaticamente.**  Cada estacionamento possui vários níveis.
-- **Gestão de Vagas**: Dentro de cada nível há vagas físicas classificadas por tipo (elétrica, acessível, moto, etc.), com tarificação por minuto configurável.  As vagas podem ser ativadas/inativadas e são monitoradas por sensores.
-- **Sensores e Telemetria**: Cada vaga pode ter um sensor que transmite eventos de ocupação (*OCUPADA*, *LIVRE* ou *DESCONHECIDO*).  Uma trigger no Oracle atualiza a tabela de cache `VAGA_STATUS` e pode transitar uma reserva para **OCUPADA** quando um sensor reporta ocupação.
-- **Reservas em Etapas**: Usuários criam reservas informando antecedência desejada; a API calcula a janela de chegada permitida com base nas regras do estacionamento.  Quando o ETA se aproxima (via integração externa), o sistema bloqueia a vaga e transita de **PRE_RESERVA** para **RESERVA**.  O sensor confirma a presença e muda para **OCUPADA**.  Após a liberação da vaga, o pagamento é iniciado e, quando concluído, a reserva passa para **PAGA**.  Timeouts automáticos cancelam reservas ou pré‑reservas fora da janela permitida.
-- **Pagamentos**: Integração com provedores de pagamento permite cobrar o valor final com idempotência e armazenar informações do pagador e cartão de forma segregada.  O `PagamentoPagador` tem relação opcional com `Endereço`, permitindo registrar dados de cobrança.
-- **Busca Paginada + HATEOAS**: Estacionamentos e Vagas possuem rotas `/search` com filtros de domínio, paginação configurável e ordenação.  As respostas dos endpoints de detalhe retornam envelopes HATEOAS com links de `self`, `update`, `delete` e demais ações relacionadas.
-- **CRUD exposto para Reservas e Pagamentos**: Além dos jobs e do monitoramento por sensores, a sprint atual disponibiliza controladores e serviços completos para criar, buscar, atualizar e remover reservas, assim como registrar pagamentos com dados de pagador/cartão.
-- **Monitoramento e observabilidade**: A API possui health checks para liveness, readiness com Oracle e servico externo de ETA, logs estruturados com Serilog, correlacao por `X-Correlation-ID`, tracing com OpenTelemetry e metricas Prometheus em `/metrics`.
-- **Testes automatizados**: A solucao contem projetos separados para testes unitarios e de integracao com xUnit, seguindo o padrao AAA e usando `WebApplicationFactory` para validar fluxos HTTP.
-## Arquitetura da Solução
+- **Clean Architecture** com projetos separados para `Domain`, `Application`, `Infrastructure` e `Api`.
+- **Oracle + EF Core** como persistência relacional oficial.
+- **MongoDB** para auditoria/eventos de sensores e operações relevantes.
+- **JWT Bearer** com papéis `Admin` e `Cliente`.
+- **Swagger/OpenAPI**, **HATEOAS**, **health checks**, **OpenTelemetry**, **Prometheus** e **Serilog**.
+- **Testes unitários e de integração** com `xUnit`.
 
-O projeto segue uma arquitetura em camadas, com separação de responsabilidades:
+## Arquitetura
 
-1. **Domínio/Entidades**: Classes de domínio representam as tabelas do Oracle.  Cada entidade contém atributos mapeados com data annotations ou configuração no `DbContext`.  Booleans são convertidos para `'Y'/'N'`, decimais têm precisão configurada e relações 1‑1/1‑N são explicitadas com *cascade* apropriado.
-2. **DTOs**: Objetos de transferência encapsulam a entrada e saída da API, evitando expor diretamente entidades internas.  Para o domínio de endereços, foram criados DTOs específicos permitindo criar ou atualizar hierarquias de UF→Cidade→Bairro→Endereço em uma única chamada.
-3. **Serviços**: Camada de negócio que orquestra validação, transações e regras de domínio.  Por exemplo, o `EstacionamentoService` valida parâmetros, constrói/atualiza o endereço completo e lança exceções quando regras são violadas (ex.: vaga duplicada por nível ou reserva concorrente).
-4. **Controladores**: Expondo endpoints RESTful, os controllers delegam ao serviço correspondente e retornam códigos HTTP adequados (201, 200, 204, 400, 404).  Um filtro global intercepta exceções e converte em respostas JSON amigáveis.
-5. **Persistência**: O `EasyParkContext` é responsável por mapear as entidades ao Oracle usando EF Core.  Chamadas a *stored procedures* (`reserva_timeouts`, `reserva_prereserva_timeouts` e `user_eta_update_process`) são encapsuladas em serviços e executadas via `Oracle.ManagedDataAccess.Core`.
+### Estrutura da solução
 
-## Modelo de Domínio
+- `easypark-net/EasyPark.Domain`: entidades e exceções de domínio.
+- `easypark-net/EasyPark.Application`: DTOs, contratos, serviços de aplicação e regras de acesso.
+- `easypark-net/EasyPark.Infrastructure`: `DbContext`, repositórios EF Core, JWT, auditoria Mongo e migrações.
+- `easypark-net/EasyPark.Api`: controllers, middleware, health checks, observabilidade e bootstrap HTTP.
+- `easypark-net/tests/EasyPark.UnitTests`: testes de Domínio e Aplicação.
+- `easypark-net/tests/EasyPark.IntegrationTests`: testes HTTP ponta a ponta com `WebApplicationFactory`.
 
-O modelo de dados está normalizado e abrange operações de estacionamento, reservas, pagamentos e endereços.  A seguir, uma visão condensada das entidades e seus propósitos:
+### Diagrama
 
-- **OPERADORA**: Empresa responsável por um ou mais estacionamentos; armazena CNPJ, razão social, etc.
-- **ESTACIONAMENTO**: Está vinculado a uma operadora e a um endereço; define parâmetros operacionais (espera, tolerância, limites de antecedência e de no‑show).
-- **NIVEL**: Andares ou seções do estacionamento; cada nível contém várias vagas.
-- **TIPO_VAGA**: Classificação e tarifa por minuto (elétrica, acessível, moto, etc.).
-- **VAGA**: Representa uma vaga física ligada a um nível e tipo; pode estar ativa ou inativa.
-- **SENSOR** e **SENSOR_EVENTO**: Equipamento e histórico de leituras (OCUPADA, LIVRE, DESCONHECIDO).  Uma trigger atualiza `VAGA_STATUS` com o último estado.
-- **VAGA_STATUS**: Cache 1:1 da vaga, com status atual, último ocorrido e sensor associado.
-- **USUARIO**: Dados de autenticação e perfil; controla suspensão por no‑shows.
-- **RESERVA**: Ciclo de vida das reservas; registra tempos (previsto, confirmado, ocupado, pago), antecendência e motivo de cancelamento.  Regra de concorrência garante no máximo uma reserva ativa por usuário e por vaga.
-- **RESERVA_PRECO** (1:1): Instantâneo dos parâmetros de preço no momento da criação (tarifa, percentual de antecedência, valor previsto/final) para reprodutibilidade.
-- **RESERVA_HIST**: Trilhas de auditoria das transições de estado e origem do evento (ETA, Sensor, Timeout).
-- **PAGAMENTO**, **PAGAMENTO_PAGADOR** e **PAGAMENTO_CARTAO**: Informações de pagamento e dados do pagador; `PagamentoPagador` referencia opcionalmente um endereço.
-- **UF**, **CIDADE**, **BAIRRO**, **ENDERECO**: Domínio de endereço em 3FN; `UF` usa sigla como chave natural.  `Endereço` contém CEP, logradouro, número, complemento, bairro e coordenadas.
-
-## Ciclo de Vida da Reserva
-
-1. **Pré‑reserva (PRE_RESERVA)**: O usuário escolhe a vaga e informa quantos minutos de antecedência deseja.  O sistema calcula a janela permitida com base nos parâmetros do estacionamento.
-2. **Atualização de ETA**: A API recebe atualizações de ETA (via serviço externo); quando o tempo estimado de chegada fica dentro da antecedência informada, a reserva transita para **RESERVA**, bloqueando a vaga.
-3. **Confirmação pelo Sensor (OCUPADA)**: Ao detectar ocupação, o sensor envia um `SENSOR_EVENTO` que a trigger interpreta para transitar a reserva para **OCUPADA**.  Caso o sensor marque ocupada antes de confirmar a reserva, a situação é registrada em histórico.
-4. **Pagamento (PAGA)**: Após a desocupação, calcula‑se o valor final (tarifa × duração real, percentual de antecedência, etc.) e inicia‑se o processo de pagamento.  Uma vez aprovado pelo gateway, a reserva passa a **PAGA**.  Se o usuário não pagar, a reserva pode ser **CANCELADA**.
-5. **Timeouts**: Stored procedures no Oracle executam rotinas de timeout: pré‑reservas expiram se a hora atual exceder `inicio_previsto + tolerancia_minutos`; reservas expiram se o usuário não chegar dentro de `espera_minutos + tolerancia_minutos`.  Essas rotinas podem ser disparadas via endpoints de **Jobs**.
-
-## Configuração e Execução
-
-### Pré‑requisitos
-
-1. **.NET SDK 8.0** ou superior instalado.  
-2. **Oracle Database** com o schema do EasyPark instalado, inclusive triggers e stored procedures fornecidas no DDL.  
-3. **Oracle Data Provider** (ODP.NET) para EF Core (já referenciado no projeto).
-
-### Passos para Rodar a API Localmente
-
-1. **Clonar o repositório**:  
-   ```bash
-   git clone https://github.com/seu-usuario/easypark-csharp.git
-   cd easypark-csharp
-   ```
-2. **Configurar a conexão**: defina a string de conexão Oracle em uma variável de ambiente, sem versionar credenciais no repositório:
-   ```powershell
-   $env:ConnectionStrings__Default = "User Id=SEU_USUARIO;Password=SUA_SENHA;Data Source=HOST:PORTA/SERVICO"
-   ```
-   No Linux/macOS:
-   ```bash
-   export ConnectionStrings__Default="User Id=SEU_USUARIO;Password=SUA_SENHA;Data Source=HOST:PORTA/SERVICO"
-   ```
-   Os parâmetros `EsperaMinutos`, `ToleranciaMinutos` e outros limites têm valores padrão, mas podem ser ajustados conforme necessidade.
-3. **Restaurar dependências**:  
-   ```bash
-   dotnet restore
-   ```
-4. **Executar a API**:  
-   ```bash
-   dotnet run
-   ```
-   O Kestrel exibirá a URL base (por exemplo `http://localhost:5190`).  Utilize essa URL ao importar a coleção do Postman.
-5. **Documentação Swagger**: em ambiente de desenvolvimento, acesse `/swagger` para visualizar e testar os endpoints interativamente.
-
-### Autenticacao Local
-
-As rotas `/api/*` exigem API key no header `X-API-Key`. O valor padrao local em `appsettings.json` e `easypark-local-key`; em ambientes reais, sobrescreva por variavel de ambiente:
-
-```powershell
-$env:Authentication__ApiKey = "sua-chave"
+```mermaid
+flowchart LR
+    Client["Cliente / Admin"] --> Api["EasyPark.Api"]
+    Api --> App["EasyPark.Application"]
+    App --> Infra["EasyPark.Infrastructure"]
+    Infra --> Oracle["Oracle / EF Core"]
+    Infra --> Mongo["MongoDB / Audit Events"]
+    Api --> Obs["Swagger + Serilog + OTEL + Prometheus + Health Checks"]
 ```
 
-As rotas `/health`, `/health/live`, `/health/ready`, `/metrics` e `/swagger` ficam publicas para monitoramento e documentacao.
+## Funcionalidades entregues
 
-### Monitoramento e Observabilidade
+### API e segurança
 
-- `GET /health/live`: verifica se o processo da API esta respondendo.
-- `GET /health/ready`: verifica dependencias de prontidao, incluindo Oracle e a URL configurada em `ExternalServices:Eta:HealthUrl`.
-- `GET /health`: retorna um JSON consolidado com status, duracao e detalhes dos checks.
-- `GET /metrics`: expoe metricas Prometheus, incluindo duracao e status das requisicoes HTTP.
-- Logs estruturados sao escritos no console e em `logs/easypark-.log`, com rotacao diaria e propriedade `CorrelationId`.
-- Traces OpenTelemetry sao emitidos para console por padrao; se `OpenTelemetry:OtlpEndpoint` for configurado, a API tambem exporta via OTLP.
+- CRUD e busca de `Estacionamentos`, `Vagas`, `Reservas` e `Pagamentos`.
+- Endpoints de autenticação:
+  - `POST /api/auth/register`
+  - `POST /api/auth/login`
+- JWT Bearer com claims de `sub`, `email` e `role`.
+- Autorização por perfil:
+  - `Admin`: operações administrativas, consultas amplas e jobs.
+  - `Cliente`: reservas e pagamentos autenticados.
+- Restrições de dono do recurso em `Reservas` e `Pagamentos`.
 
-### Execucao dos Testes
+### Paginação, ordenação, filtros e HATEOAS
 
-Execute todos os testes:
+- Busca paginada em:
+  - `GET /api/estacionamentos/search`
+  - `GET /api/vagas/search`
+  - `GET /api/reservas/search`
+  - `GET /api/pagamentos/search`
+  - `GET /api/auditoria/eventos-sensor`
+- HATEOAS aplicado nos endpoints de consulta por ID e busca paginada.
+
+### Persistência
+
+- Oracle como banco relacional oficial.
+- Repositórios concretos para:
+  - `Estacionamento`
+  - `Vaga`
+  - `Reserva`
+  - `Pagamento`
+  - `Usuario`
+- Migração inicial em:
+  - `easypark-net/EasyPark.Infrastructure/Migrations/20260524175122_InitialSprint4.cs`
+- MongoDB para auditoria com os campos:
+  - `Id`
+  - `OccurredAt`
+  - `EventType`
+  - `EntityType`
+  - `EntityId`
+  - `UserId`
+  - `CorrelationId`
+  - `PayloadJson`
+  - `Source`
+
+## Endpoints principais
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/api/auth/register` | Registra usuário e retorna JWT |
+| `POST` | `/api/auth/login` | Autentica e retorna JWT |
+| `POST` | `/api/estacionamentos` | Cria estacionamento |
+| `GET` | `/api/estacionamentos/{id}` | Consulta estacionamento com HATEOAS |
+| `GET` | `/api/estacionamentos/search` | Busca paginada de estacionamentos |
+| `POST` | `/api/vagas` | Cria vaga |
+| `GET` | `/api/vagas/{id}` | Consulta vaga com HATEOAS |
+| `GET` | `/api/vagas/search` | Busca paginada de vagas |
+| `GET` | `/api/vagas/{id}/status` | Consulta status da vaga |
+| `GET` | `/api/estacionamentos/{estacionamentoId}/vagas` | Lista vagas por estacionamento |
+| `POST` | `/api/reservas` | Cria reserva |
+| `GET` | `/api/reservas/{id}` | Consulta reserva com HATEOAS |
+| `GET` | `/api/reservas/search` | Busca paginada de reservas |
+| `PUT` | `/api/reservas/{id}` | Atualiza reserva |
+| `DELETE` | `/api/reservas/{id}` | Remove reserva |
+| `POST` | `/api/pagamentos` | Cria pagamento |
+| `GET` | `/api/pagamentos/{id}` | Consulta pagamento com HATEOAS |
+| `GET` | `/api/pagamentos/search` | Busca paginada de pagamentos |
+| `POST` | `/api/jobs/reservas/timeouts` | Executa job de timeout de reservas |
+| `POST` | `/api/jobs/prereservas/timeouts` | Executa job de timeout de pré-reservas |
+| `POST` | `/api/jobs/reservas/{id}/eta` | Atualiza ETA da reserva |
+| `GET` | `/api/auditoria/eventos-sensor` | Busca eventos de auditoria |
+| `GET` | `/api/auditoria/eventos-sensor/{id}` | Consulta evento de auditoria |
+| `GET` | `/health/live` | Liveness |
+| `GET` | `/health/ready` | Readiness com Oracle, Mongo e serviço externo |
+| `GET` | `/health` | Health consolidado |
+| `GET` | `/metrics` | Métricas Prometheus |
+
+## Configuração
+
+### Pré-requisitos
+
+- `.NET SDK 8`
+- Oracle Database acessível
+- MongoDB acessível para a auditoria completa
+
+### Variáveis e appsettings
+
+Exemplos importantes:
+
+```powershell
+$env:ConnectionStrings__Default = "User Id=SEU_USUARIO;Password=SUA_SENHA;Data Source=HOST:PORTA/SERVICO"
+$env:Jwt__Issuer = "EasyPark.Api"
+$env:Jwt__Audience = "EasyPark.Client"
+$env:Jwt__SecretKey = "uma-chave-grande-e-segura"
+$env:Mongo__ConnectionString = "mongodb://localhost:27017"
+$env:Mongo__DatabaseName = "easypark"
+```
+
+Se `Mongo:ConnectionString` não for informado, a API usa auditoria em memória e o health check de Mongo responde como `Degraded`. Para a avaliação final, configure Mongo real.
+
+## Como executar
+
+### Restaurar dependências
+
+```bash
+cd easypark-net
+dotnet restore
+dotnet tool restore
+```
+
+### Aplicar migrações
+
+```bash
+dotnet tool run dotnet-ef database update --project EasyPark.Infrastructure --startup-project EasyPark.Infrastructure
+```
+
+### Subir a API
+
+```bash
+dotnet run --project EasyPark.Api.csproj
+```
+
+Swagger em ambiente de desenvolvimento:
+
+- `http://localhost:<porta>/swagger`
+
+## Observabilidade
+
+- `Serilog` no console e em `logs/easypark-.log`
+- `CorrelationId` via header `X-Correlation-ID`
+- `OpenTelemetry` com export console e OTLP opcional
+- `Prometheus` em `/metrics`
+- `ProblemDetails` padronizado para `400`, `401`, `403`, `404`, `409` e `500`
+
+## Aderência ao Sprint 4
+
+| Requisito | Evidência no projeto |
+|---|---|
+| Clean Architecture | Projetos separados em `Domain`, `Application`, `Infrastructure` e `Api` |
+| SOLID e Clean Code | Controllers delegam para serviços; contratos e repositórios ficam na camada de aplicação |
+| Injeção de Dependência | Configurada em `Program.cs` e `EasyPark.Infrastructure/DependencyInjection.cs` |
+| Exceções globais | Middleware `GlobalExceptionMiddleware` com `ProblemDetails` |
+| API RESTful | Controllers para autenticação, estacionamentos, vagas, reservas, pagamentos, jobs e auditoria |
+| Swagger/OpenAPI | Configurado com autenticação Bearer JWT |
+| Paginação, ordenação e filtros | Endpoints `/search` e auditoria aceitam `page`, `pageSize`, `sortBy`, `sortDir` e filtros por domínio |
+| HATEOAS | Envelopes `ResourceDto<T>` e `PagedResourceDto<T>` com links de navegação |
+| JWT/Auth | `POST /api/auth/register`, `POST /api/auth/login` e roles `Admin`/`Cliente` |
+| EF Core + Oracle | `EasyParkContext`, provider Oracle e migration inicial |
+| MongoDB | Repositório `MongoAuditEventRepository` para eventos de auditoria |
+| Repository Pattern | Repositórios concretos em `EasyPark.Infrastructure/Repositories` |
+| Health Checks | `/health/live`, `/health/ready` e `/health` |
+| Logging e observabilidade | Serilog, `CorrelationId`, OpenTelemetry e Prometheus |
+| Testes | xUnit com testes unitários e de integração |
+| Documentação | README com arquitetura, endpoints, instalação, testes, observabilidade e integrantes |
+
+## Testes
+
+Executar tudo:
 
 ```bash
 dotnet test easypark-net/EasyPark.sln
 ```
 
-Para coletar cobertura:
+Cobertura:
 
 ```bash
 dotnet test easypark-net/EasyPark.sln --collect:"XPlat Code Coverage"
 ```
 
-Os testes unitarios ficam em `easypark-net/tests/EasyPark.UnitTests` e os testes de integracao ficam em `easypark-net/tests/EasyPark.IntegrationTests`. Os testes de integracao usam SQLite em memoria para nao depender do Oracle real; o health check da aplicacao continua validando Oracle em runtime normal quando a connection string esta configurada.
+Status atual da suíte:
 
-## API Endpoints Principais
-
-| Método | Rota | Descrição resumida |
-|-------|------|-------------------|
-| **POST** | `/api/estacionamentos` | Cadastra novo estacionamento com sua hierarquia de endereço e parâmetros operacionais |
-| **GET** | `/api/estacionamentos` | Lista todos os estacionamentos cadastrados |
-| **GET** | `/api/estacionamentos/{id}` | Retorna detalhes de um estacionamento específico |
-| **PUT** | `/api/estacionamentos/{id}` | Atualiza dados e endereço do estacionamento |
-| **DELETE** | `/api/estacionamentos/{id}` | Remove um estacionamento (erros podem ocorrer se houver níveis/vagas associados) |
-| **GET** | `/api/estacionamentos/search` | Busca paginada com filtros por nome, UF, cidade e bairro (resposta HATEOAS) |
-| **POST** | `/api/vagas` | Cria uma vaga em um nível e tipo específicos |
-| **GET** | `/api/vagas` | Lista vagas, com filtro opcional por status (LIVRE, OCUPADA, DESCONHECIDO) |
-| **GET** | `/api/vagas/{id}` | Detalhes de uma vaga |
-| **PUT** | `/api/vagas/{id}` | Atualiza dados (nível, tipo, código, ativa) |
-| **DELETE** | `/api/vagas/{id}` | Remove a vaga |
-| **GET** | `/api/vagas/{id}/status` | Obtém o status atual da vaga (cache) |
-| **GET** | `/estacionamentos/{estacionamentoId}/vagas` | Lista vagas de um estacionamento específico |
-| **GET** | `/api/vagas/search` | Busca paginada com filtros por estacionamento, nível, tipo, status e código |
-| **POST** | `/api/reservas` | Cria uma reserva em estado inicial (ex.: PRE_RESERVA) |
-| **GET** | `/api/reservas/{id}` | Recupera uma reserva específica |
-| **GET** | `/api/reservas/search` | Pesquisa reservas por usuário, vaga, status e intervalo de datas |
-| **PUT** | `/api/reservas/{id}` | Atualiza datas, status ou valores da reserva |
-| **DELETE** | `/api/reservas/{id}` | Cancela/Remove a reserva quando aplicável |
-| **POST** | `/api/pagamentos` | Registra um pagamento associado a usuário/reserva com dados do pagador |
-| **GET** | `/api/pagamentos/{id}` | Retorna o pagamento criado, incluindo pagador e cartão |
-| **GET** | `/api/pagamentos/search` | Lista pagamentos filtrando por reserva, usuário, status ou método |
-| **POST** | `/api/jobs/reservas/timeouts` | Executa procedure que cancela reservas expiradas |
-| **POST** | `/api/jobs/prereservas/timeouts` | Executa procedure que cancela pré‑reservas expiradas |
-| **POST** | `/api/jobs/reservas/{id}/eta` | Atualiza o ETA de uma reserva específica (parâmetro `minutos`) |
-| **GET** | `/health/live` | Liveness check da API |
-| **GET** | `/health/ready` | Readiness check com Oracle e servico externo |
-| **GET** | `/health` | Health check consolidado em JSON |
-| **GET** | `/metrics` | Metricas Prometheus |
-
-### Exemplo de payload de criação ou atualização de Estacionamento
-
-Para criar ou atualizar um estacionamento, utilize um corpo JSON que inclui os dados do estacionamento e um objeto `endereco` com a hierarquia completa.  A API cria ou atualiza a hierarquia de UF→Cidade→Bairro→Endereço com base neste objeto e retorna o estacionamento com o endereço completo incluído.  Exemplo:
-
-```json
-{
-  "operadoraId": 1,
-  "nome": "Estacionamento Central",
-  "esperaMinutos": 10,
-  "toleranciaMinutos": 5,
-  "limiteNoShow": 3,
-  "maxAntecedenciaMinutos": 60,
-  "maxAntecedenciaMinutosSuspenso": 120,
-  "endereco": {
-    "ufSigla": "SP",
-    "cidadeNome": "São Paulo",
-    "bairroNome": "Centro",
-    "cep": "01000-000",
-    "logradouro": "Av. Paulista",
-    "numero": "1000",
-    "complemento": "Apto. 101",
-    "latitude": -23.56199,
-    "longitude": -46.65675
-  }
-}
-```
-
-
-Outros endpoints (usuários, reservas, pagamentos) poderão ser expostos conforme evolução do projeto.  Cada erro de negócio retorna status e mensagem apropriados (400 para validações, 404 para não encontrado, 500 para erro inesperado), padronizados pelo filtro de exceções.
-
-## Coleção Postman
-
-O repositório inclui uma coleção Postman (`EasyPark_csharp.postman_collection.json`) e um ambiente (`EasyPark_Local_Dotnet.postman_environment.json`) que facilitam a experimentação da API:
-
-1. **Importe** ambos os arquivos no Postman.
-2. **Configure** a variável `{{baseUrl}}` do environment com a URL local da API (por exemplo `http://localhost:5190`).
-3. Atualize as variáveis de IDs (`{{estacionamentoId}}`, `{{vagaId}}`, `{{reservaId}}`, `{{pagamentoId}}`) após cada criação. Há também valores auxiliares (`{{usuarioId}}`, `{{pagamentoValor}}`, `{{pagamentoStatus}}`, `{{status}}`, `{{minutos}}`) para acelerar os testes.
-4. Cada pasta da coleção contém exemplos completos:
-   - **Estacionamentos** e **Vagas**: CRUD + rotas `/search` já preenchidas com filtros de paginação/ordenação.
-   - **Reservas**: criação, consulta, busca paginada, atualização e cancelamento.
-   - **Pagamentos**: criação com pagador/cartão aninhados, consulta e search com filtros.
-   - **Jobs**: chamadas às procedures de timeout e atualização de ETA.
-
----
-
-## Integrantes
-
-- **Gabriel Cruz Ferreira** — RM559613  
-- **Kauã Ferreira dos Santos** — RM560992  
-- **Vinicius da Silva Bitú** — RM560227  
+- `33` testes unitários
+- `7` testes de integração
+- Cobertura unitária atual:
+  - `EasyPark.Domain`: `98,56%`
+  - `EasyPark.Application`: `75,79%`
