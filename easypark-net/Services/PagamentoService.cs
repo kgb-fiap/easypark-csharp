@@ -1,56 +1,72 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using EasyPark.Api.Data;
 using EasyPark.Api.Dtos;
 using EasyPark.Api.Exceptions;
 using EasyPark.Api.Models;
 using EasyPark.Api.Observability;
-using Microsoft.EntityFrameworkCore;
+using EasyPark.Application.Abstractions;
 
 namespace EasyPark.Api.Services;
 
-// Serviço responsável pelo ciclo de vida dos pagamentos.
 public class PagamentoService
 {
-    private readonly EasyParkContext _context;
+    private readonly IPagamentoRepository _pagamentoRepository;
+    private readonly IReservaRepository _reservaRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IEnderecoRepository _enderecoRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditEventRepository _auditEventRepository;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public PagamentoService(EasyParkContext context)
+    public PagamentoService(
+        IPagamentoRepository pagamentoRepository,
+        IReservaRepository reservaRepository,
+        IUserRepository userRepository,
+        IEnderecoRepository enderecoRepository,
+        IUnitOfWork unitOfWork,
+        IAuditEventRepository auditEventRepository,
+        ICurrentUserContext currentUserContext)
     {
-        _context = context;
+        _pagamentoRepository = pagamentoRepository;
+        _reservaRepository = reservaRepository;
+        _userRepository = userRepository;
+        _enderecoRepository = enderecoRepository;
+        _unitOfWork = unitOfWork;
+        _auditEventRepository = auditEventRepository;
+        _currentUserContext = currentUserContext;
     }
 
-    public async Task<PagamentoOutDto> CreateAsync(PagamentoInDto dto)
+    public async Task<PagamentoOutDto> CreateAsync(PagamentoInDto dto, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("PagamentoService.Create");
-        activity?.SetTag("reserva.id", dto.ReservaId);
-        activity?.SetTag("usuario.id", dto.UsuarioId);
-        activity?.SetTag("pagamento.valor", dto.Valor);
+
+        var actorId = RequireAuthenticatedUserId();
+        var usuarioId = await ResolveUsuarioIdAsync(dto, cancellationToken);
 
         if (dto.ReservaId.HasValue)
         {
-            _ = await _context.Reservas.FindAsync(dto.ReservaId.Value)
+            var reserva = await _reservaRepository.FindByIdAsync(dto.ReservaId.Value, cancellationToken: cancellationToken)
                 ?? throw new EntityNotFoundException($"Reserva {dto.ReservaId.Value} não encontrada");
+
+            EnsureCanAccess(reserva.UsuarioId);
         }
 
-        if (dto.UsuarioId.HasValue)
+        if (usuarioId.HasValue)
         {
-            _ = await _context.Usuarios.FindAsync(dto.UsuarioId.Value)
-                ?? throw new EntityNotFoundException($"Usuário {dto.UsuarioId.Value} não encontrado");
+            _ = await _userRepository.FindByIdAsync(usuarioId.Value, cancellationToken: cancellationToken)
+                ?? throw new EntityNotFoundException($"Usuário {usuarioId.Value} não encontrado");
         }
 
         var pagamento = new Pagamento
         {
             ReservaId = dto.ReservaId,
-            UsuarioId = dto.UsuarioId,
-            Status = string.IsNullOrWhiteSpace(dto.Status) ? "PENDENTE" : dto.Status!.Trim().ToUpperInvariant(),
+            UsuarioId = usuarioId,
+            Status = string.IsNullOrWhiteSpace(dto.Status) ? "PENDENTE" : dto.Status.Trim().ToUpperInvariant(),
             Valor = dto.Valor,
             IdempotenciaChave = dto.IdempotenciaChave,
             CriadoEm = DateTimeOffset.UtcNow
         };
 
-        _context.Pagamentos.Add(pagamento);
-        await _context.SaveChangesAsync();
+        _pagamentoRepository.Add(pagamento);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         PagamentoPagador? pagador = null;
         if (dto.Pagador is not null)
@@ -64,11 +80,10 @@ public class PagamentoService
 
             if (dto.Pagador.Endereco is not null)
             {
-                pagador.Endereco = await UpsertEnderecoAsync(dto.Pagador.Endereco);
+                pagador.Endereco = await _enderecoRepository.UpsertAsync(dto.Pagador.Endereco, cancellationToken: cancellationToken);
             }
 
-            _context.PagamentoPagadores.Add(pagador);
-            await _context.SaveChangesAsync();
+            _pagamentoRepository.AddPagador(pagador);
         }
 
         PagamentoCartao? cartao = null;
@@ -82,29 +97,27 @@ public class PagamentoService
                 UltimosDigitos = dto.Cartao.UltimosDigitos,
                 TransacaoId = dto.Cartao.TransacaoId
             };
-            _context.PagamentoCartoes.Add(cartao);
-            await _context.SaveChangesAsync();
+
+            _pagamentoRepository.AddCartao(cartao);
         }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("PAGAMENTO_CREATED", pagamento.Id, actorId, new { pagamento.Id, pagamento.UsuarioId, pagamento.ReservaId, pagamento.Status, pagamento.Valor }, cancellationToken);
 
         return MapPagamento(pagamento, pagador, cartao);
     }
 
-    public async Task<PagamentoOutDto> FindByIdAsync(long id)
+    public async Task<PagamentoOutDto> FindByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("PagamentoService.FindById");
-        activity?.SetTag("pagamento.id", id);
 
-        var pagamento = await _context.Pagamentos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id)
+        var pagamento = await _pagamentoRepository.FindByIdAsync(id, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Pagamento {id} não encontrado");
 
-        var pagador = await _context.PagamentoPagadores.AsNoTracking()
-            .Include(p => p.Endereco)!
-                .ThenInclude(e => e!.Bairro)!
-                    .ThenInclude(b => b!.Cidade)!
-                        .ThenInclude(c => c!.Uf)
-            .FirstOrDefaultAsync(p => p.PagamentoId == id);
+        EnsureCanAccess(pagamento.UsuarioId);
 
-        var cartao = await _context.PagamentoCartoes.AsNoTracking().FirstOrDefaultAsync(c => c.PagamentoId == id);
+        var pagador = await _pagamentoRepository.FindPagadorByPagamentoIdAsync(id, cancellationToken);
+        var cartao = await _pagamentoRepository.FindCartaoByPagamentoIdAsync(id, cancellationToken);
 
         return MapPagamento(pagamento, pagador, cartao);
     }
@@ -117,167 +130,102 @@ public class PagamentoService
         long? reservaId,
         long? usuarioId,
         string? status,
-        string? metodo)
+        string? metodo,
+        CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("PagamentoService.Search");
-        activity?.SetTag("page", page);
-        activity?.SetTag("page.size", pageSize);
-        activity?.SetTag("pagamento.status", status);
-        activity?.SetTag("pagamento.metodo", metodo);
+
+        var actorId = RequireAuthenticatedUserId();
+        if (!_currentUserContext.IsAdmin)
+        {
+            usuarioId = actorId;
+        }
 
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
         sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
 
-        var query = from p in _context.Pagamentos.AsNoTracking()
-                    join c in _context.PagamentoCartoes.AsNoTracking() on p.Id equals c.PagamentoId into cartaoGroup
-                    from c in cartaoGroup.DefaultIfEmpty()
-                    select new PagamentoSearchProjection(p, c != null);
+        var result = await _pagamentoRepository.SearchAsync(page, pageSize, sortBy, sortDir, reservaId, usuarioId, status, metodo, cancellationToken);
+        var totalPages = (int)Math.Ceiling(result.TotalItems / (double)pageSize);
+        var paymentIds = result.Items.Select(x => x.Id).ToList();
 
-        if (reservaId.HasValue)
-        {
-            query = query.Where(x => x.Pagamento.ReservaId == reservaId.Value);
-        }
-
-        if (usuarioId.HasValue)
-        {
-            query = query.Where(x => x.Pagamento.UsuarioId == usuarioId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            var statusFilter = status.Trim().ToUpperInvariant();
-            query = query.Where(x => x.Pagamento.Status != null && x.Pagamento.Status.ToUpper() == statusFilter);
-        }
-
-        if (!string.IsNullOrWhiteSpace(metodo))
-        {
-            var metodoFilter = metodo.Trim().ToLowerInvariant();
-            query = metodoFilter switch
-            {
-                "cartao" => query.Where(x => x.PossuiCartao),
-                "manual" or "offline" => query.Where(x => !x.PossuiCartao),
-                _ => query
-            };
-        }
-
-        query = ApplyOrdering(query, sortBy, sortDir);
-
-        var totalItems = await query.LongCountAsync();
-        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        var pagamentos = await query.Skip((page - 1) * pageSize).Take(pageSize).Select(x => x.Pagamento).ToListAsync();
-
-        var pagamentoIds = pagamentos.Select(pg => pg.Id).ToList();
-
-        var pagadores = await _context.PagamentoPagadores.AsNoTracking()
-            .Where(p => pagamentoIds.Contains(p.PagamentoId))
-            .Include(p => p.Endereco)!
-                .ThenInclude(e => e!.Bairro)!
-                    .ThenInclude(b => b!.Cidade)!
-                        .ThenInclude(c => c!.Uf)
-            .ToListAsync();
-
-        var cartoes = await _context.PagamentoCartoes.AsNoTracking()
-            .Where(c => pagamentoIds.Contains(c.PagamentoId))
-            .ToListAsync();
-
-        var items = pagamentos
-            .Select(pg => MapPagamento(
-                pg,
-                pagadores.FirstOrDefault(p => p.PagamentoId == pg.Id),
-                cartoes.FirstOrDefault(c => c.PagamentoId == pg.Id)))
-            .ToList();
+        var pagadores = await _pagamentoRepository.FindPagadoresByPagamentoIdsAsync(paymentIds, cancellationToken);
+        var cartoes = await _pagamentoRepository.FindCartoesByPagamentoIdsAsync(paymentIds, cancellationToken);
 
         return new PagedResultDto<PagamentoOutDto>
         {
             Page = page,
             PageSize = pageSize,
-            TotalItems = totalItems,
+            TotalItems = result.TotalItems,
             TotalPages = totalPages,
-            Items = items
+            Items = result.Items.Select(pg => MapPagamento(
+                pg,
+                pagadores.TryGetValue(pg.Id, out var pagador) ? pagador : null,
+                cartoes.TryGetValue(pg.Id, out var cartao) ? cartao : null)).ToList()
         };
     }
 
-    private async Task<Endereco> UpsertEnderecoAsync(EnderecoInDto dto)
+    private async Task<long?> ResolveUsuarioIdAsync(PagamentoInDto dto, CancellationToken cancellationToken)
     {
-        var ufSigla = dto.Uf.Trim().ToUpperInvariant();
-        var ufNome = string.IsNullOrWhiteSpace(dto.UfNome) ? ufSigla : dto.UfNome.Trim();
-
-        var uf = await _context.Ufs.FindAsync(ufSigla);
-        if (uf is null)
+        if (_currentUserContext.IsAdmin)
         {
-            uf = new Uf { Sigla = ufSigla, Nome = ufNome };
-            _context.Ufs.Add(uf);
-        }
-        else if (!string.IsNullOrWhiteSpace(dto.UfNome) && !string.Equals(uf.Nome, ufNome, StringComparison.OrdinalIgnoreCase))
-        {
-            uf.Nome = ufNome;
+            return dto.UsuarioId;
         }
 
-        var cidadeNome = dto.Cidade.Trim();
-        var cidade = await _context.Cidades.FirstOrDefaultAsync(c => c.Nome == cidadeNome && c.UfSigla == ufSigla);
-        if (cidade is null)
+        if (!_currentUserContext.UserId.HasValue)
         {
-            cidade = new Cidade { Nome = cidadeNome, UfSigla = ufSigla, Uf = uf };
-            _context.Cidades.Add(cidade);
+            throw new UnauthorizedException("Usuário autenticado é obrigatório.");
         }
 
-        Bairro? bairro = null;
-        if (cidade.Id > 0)
+        if (dto.UsuarioId.HasValue && dto.UsuarioId.Value != _currentUserContext.UserId.Value)
         {
-            bairro = await _context.Bairros.FirstOrDefaultAsync(b => b.Nome == dto.Bairro && b.CidadeId == cidade.Id);
+            throw new ForbiddenException("Você não pode criar pagamentos para outro usuário.");
         }
 
-        if (bairro is null)
+        if (dto.ReservaId.HasValue)
         {
-            bairro = new Bairro { Nome = dto.Bairro.Trim(), Cidade = cidade };
-            _context.Bairros.Add(bairro);
+            var reserva = await _reservaRepository.FindByIdAsync(dto.ReservaId.Value, cancellationToken: cancellationToken)
+                ?? throw new EntityNotFoundException($"Reserva {dto.ReservaId.Value} não encontrada");
+
+            if (reserva.UsuarioId != _currentUserContext.UserId.Value)
+            {
+                throw new ForbiddenException("Você não pode pagar uma reserva de outro usuário.");
+            }
+
+            return reserva.UsuarioId;
         }
 
-        var endereco = new Endereco
-        {
-            Cep = dto.Cep,
-            Logradouro = dto.Logradouro.Trim(),
-            Numero = dto.Numero,
-            Complemento = dto.Complemento,
-            Bairro = bairro,
-            Latitude = dto.Latitude,
-            Longitude = dto.Longitude
-        };
-
-        _context.Enderecos.Add(endereco);
-        await _context.SaveChangesAsync();
-        return endereco;
+        return _currentUserContext.UserId.Value;
     }
 
-    private static IQueryable<PagamentoSearchProjection> ApplyOrdering(IQueryable<PagamentoSearchProjection> query, string? sortBy, string sortDir)
+    private void EnsureCanAccess(long? usuarioId)
     {
-        var ascending = sortDir != "desc";
-        var key = string.IsNullOrWhiteSpace(sortBy) ? "data" : sortBy.Trim().ToLowerInvariant();
-
-        return key switch
+        if (_currentUserContext.IsAdmin)
         {
-            "valor" => ascending
-                ? query.OrderBy(x => x.Pagamento.Valor)
-                : query.OrderByDescending(x => x.Pagamento.Valor),
-            "status" => ascending
-                ? query.OrderBy(x => x.Pagamento.Status)
-                : query.OrderByDescending(x => x.Pagamento.Status),
-            "reserva" => ascending
-                ? query.OrderBy(x => x.Pagamento.ReservaId)
-                : query.OrderByDescending(x => x.Pagamento.ReservaId),
-            "usuario" => ascending
-                ? query.OrderBy(x => x.Pagamento.UsuarioId)
-                : query.OrderByDescending(x => x.Pagamento.UsuarioId),
-            _ => ascending
-                ? query.OrderBy(x => x.Pagamento.CriadoEm)
-                : query.OrderByDescending(x => x.Pagamento.CriadoEm)
-        };
+            return;
+        }
+
+        if (!_currentUserContext.UserId.HasValue || usuarioId != _currentUserContext.UserId.Value)
+        {
+            throw new ForbiddenException("Você não tem acesso a este pagamento.");
+        }
     }
+
+    private long RequireAuthenticatedUserId()
+        => _currentUserContext.UserId ?? throw new UnauthorizedException("Usuário autenticado é obrigatório.");
+
+    private Task WriteAuditAsync(string eventType, long entityId, long actorId, object payload, CancellationToken cancellationToken)
+        => _auditEventRepository.WriteAsync(new AuditEventWriteDto(
+            eventType,
+            nameof(Pagamento),
+            entityId.ToString(),
+            actorId,
+            _currentUserContext.CorrelationId,
+            payload,
+            "PagamentoService"), cancellationToken);
 
     private static PagamentoOutDto MapPagamento(Pagamento pagamento, PagamentoPagador? pagador, PagamentoCartao? cartao)
-    {
-        return new PagamentoOutDto(
+        => new(
             pagamento.Id,
             pagamento.ReservaId,
             pagamento.UsuarioId,
@@ -294,7 +242,6 @@ public class PagamentoService
                 cartao.Bandeira,
                 cartao.UltimosDigitos,
                 cartao.TransacaoId));
-    }
 
     private static EnderecoOutDto? MapEndereco(Endereco? endereco)
     {
@@ -303,23 +250,17 @@ public class PagamentoService
             return null;
         }
 
-        var bairro = endereco.Bairro;
-        var cidade = bairro?.Cidade;
-        var uf = cidade?.Uf;
-
         return new EnderecoOutDto(
             endereco.Id,
             endereco.Cep,
             endereco.Logradouro,
             endereco.Numero,
             endereco.Complemento,
-            bairro?.Nome,
-            cidade?.Nome,
-            uf?.Sigla,
-            uf?.Nome,
+            endereco.Bairro?.Nome,
+            endereco.Bairro?.Cidade?.Nome,
+            endereco.Bairro?.Cidade?.Uf?.Sigla,
+            endereco.Bairro?.Cidade?.Uf?.Nome,
             endereco.Latitude,
             endereco.Longitude);
     }
-
-    private record PagamentoSearchProjection(Pagamento Pagamento, bool PossuiCartao);
 }

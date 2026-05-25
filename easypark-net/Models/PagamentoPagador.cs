@@ -17,6 +17,12 @@ public class PagamentoPagador
     [Column("NOME")]
     public string? Nome { get; set; }
 
+    [Column("EMAIL")]
+    public string? Email { get; set; }
+
+    [Column("TELEFONE")]
+    public string? Telefone { get; set; }
+
     [Column("ENDERECO_ID")]
     public long? EnderecoId { get; set; }
 

@@ -11,7 +11,7 @@ public class PagamentoCartao
     public long PagamentoId { get; set; }
 
     [Required]
-    [Column("TITULAR")]
+    [Column("TITULAR_NOME")]
     public string Titular { get; set; } = null!;
 
     [Required]
@@ -19,10 +19,10 @@ public class PagamentoCartao
     public string Bandeira { get; set; } = null!;
 
     [Required]
-    [Column("ULTIMOS_DIGITOS")]
+    [Column("FINAL_CARTAO")]
     public string UltimosDigitos { get; set; } = null!;
 
     [Required]
-    [Column("TRANSACAO_ID")]
+    [Column("TOKEN")]
     public string TransacaoId { get; set; } = null!;
 }

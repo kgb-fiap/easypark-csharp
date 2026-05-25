@@ -15,10 +15,22 @@ public class ReservaHist
     [Column("RESERVA_ID")]
     public long ReservaId { get; set; }
 
+    [Column("FROM_ESTADO")]
+    public string? FromEstado { get; set; }
+
     [Required]
-    [Column("STATUS")]
+    [Column("TO_ESTADO")]
     public string Status { get; set; } = null!;
 
-    [Column("DATA_ALTERACAO")]
+    [Column("ORIGEM_EVENTO")]
+    public string? OrigemEvento { get; set; }
+
+    [Column("REFERENCIA_ID")]
+    public long? ReferenciaId { get; set; }
+
+    [Column("OBSERVACAO")]
+    public string? Observacao { get; set; }
+
+    [Column("OCORRIDO_EM")]
     public DateTimeOffset DataAlteracao { get; set; }
 }

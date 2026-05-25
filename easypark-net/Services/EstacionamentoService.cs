@@ -1,62 +1,63 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using EasyPark.Api.Data;
 using EasyPark.Api.Dtos;
 using EasyPark.Api.Exceptions;
 using EasyPark.Api.Models;
 using EasyPark.Api.Observability;
-using Microsoft.EntityFrameworkCore;
+using EasyPark.Application.Abstractions;
 
 namespace EasyPark.Api.Services;
 
 public class EstacionamentoService
 {
-    private readonly EasyParkContext _context;
-    public EstacionamentoService(EasyParkContext context)
+    private readonly IEstacionamentoRepository _estacionamentoRepository;
+    private readonly IEnderecoRepository _enderecoRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditEventRepository _auditEventRepository;
+
+    public EstacionamentoService(
+        IEstacionamentoRepository estacionamentoRepository,
+        IEnderecoRepository enderecoRepository,
+        IUnitOfWork unitOfWork,
+        IAuditEventRepository auditEventRepository)
     {
-        _context = context;
+        _estacionamentoRepository = estacionamentoRepository;
+        _enderecoRepository = enderecoRepository;
+        _unitOfWork = unitOfWork;
+        _auditEventRepository = auditEventRepository;
     }
 
-    public async Task<EstacionamentoOutDto> CreateAsync(EstacionamentoInDto dto)
+    public async Task<EstacionamentoOutDto> CreateAsync(EstacionamentoInDto dto, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.Create");
         activity?.SetTag("estacionamento.nome", dto.Nome);
         activity?.SetTag("operadora.id", dto.OperadoraId);
 
         var enderecoDto = dto.Endereco ?? throw new ValidationException("Endereço é obrigatório");
-        var endereco = await UpsertEnderecoAsync(enderecoDto);
+        var endereco = await _enderecoRepository.UpsertAsync(enderecoDto, cancellationToken: cancellationToken);
 
-        var est = new Estacionamento
+        var estacionamento = new Estacionamento
         {
             OperadoraId = dto.OperadoraId,
             Nome = dto.Nome,
             Endereco = endereco,
-            CriadoEm = System.DateTimeOffset.UtcNow
+            CriadoEm = DateTimeOffset.UtcNow
         };
-        _context.Estacionamentos.Add(est);
-        await _context.SaveChangesAsync();
-        await _context.Entry(est).Reference(e => e.Endereco).LoadAsync();
-        await _context.Entry(est.Endereco).Reference(e => e.Bairro).LoadAsync();
-        if (est.Endereco.Bairro is not null)
-        {
-            await _context.Entry(est.Endereco.Bairro).Reference(b => b.Cidade).LoadAsync();
-            if (est.Endereco.Bairro.Cidade is not null)
-            {
-                await _context.Entry(est.Endereco.Bairro.Cidade).Reference(c => c.Uf).LoadAsync();
-            }
-        }
-        return MapToDto(est);
+
+        _estacionamentoRepository.Add(estacionamento);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var persisted = await _estacionamentoRepository.FindByIdWithEnderecoAsync(estacionamento.Id, cancellationToken: cancellationToken)
+            ?? throw new EntityNotFoundException($"Estacionamento {estacionamento.Id} não encontrado");
+
+        await WriteAuditAsync("ESTACIONAMENTO_CREATED", persisted.Id, new { persisted.Id, persisted.Nome, persisted.OperadoraId }, cancellationToken);
+        return MapToDto(persisted);
     }
 
-    public async Task<IEnumerable<EstacionamentoOutDto>> FindAllAsync()
+    public async Task<IEnumerable<EstacionamentoOutDto>> FindAllAsync(CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.FindAll");
-
-        var list = await WithEndereco(_context.Estacionamentos.AsNoTracking()).ToListAsync();
-        return list.Select(MapToDto);
+        var items = await _estacionamentoRepository.FindAllWithEnderecoAsync(cancellationToken);
+        return items.Select(MapToDto);
     }
 
     public async Task<PagedResultDto<EstacionamentoOutDto>> SearchAsync(
@@ -67,185 +68,85 @@ public class EstacionamentoService
         string? nome,
         string? ufSigla,
         string? cidadeNome,
-        string? bairroNome)
+        string? bairroNome,
+        CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.Search");
         activity?.SetTag("page", page);
         activity?.SetTag("page.size", pageSize);
-        activity?.SetTag("estacionamento.nome", nome);
 
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
         sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
 
-        IQueryable<Estacionamento> query = WithEndereco(_context.Estacionamentos.AsNoTracking());
-
-        if (!string.IsNullOrWhiteSpace(nome))
-        {
-            var filter = nome.Trim().ToUpperInvariant();
-            query = query.Where(e => e.Nome.ToUpper().Contains(filter));
-        }
-
-        if (!string.IsNullOrWhiteSpace(ufSigla))
-        {
-            var sigla = ufSigla.Trim().ToUpperInvariant();
-            query = query.Where(e => e.Endereco != null && e.Endereco.Bairro != null && e.Endereco.Bairro.Cidade != null && e.Endereco.Bairro.Cidade.Uf != null && e.Endereco.Bairro.Cidade.Uf.Sigla == sigla);
-        }
-
-        if (!string.IsNullOrWhiteSpace(cidadeNome))
-        {
-            var cidadeFilter = cidadeNome.Trim().ToUpperInvariant();
-            query = query.Where(e => e.Endereco != null && e.Endereco.Bairro != null && e.Endereco.Bairro.Cidade != null && e.Endereco.Bairro.Cidade.Nome.ToUpper().Contains(cidadeFilter));
-        }
-
-        if (!string.IsNullOrWhiteSpace(bairroNome))
-        {
-            var bairroFilter = bairroNome.Trim().ToUpperInvariant();
-            query = query.Where(e => e.Endereco != null && e.Endereco.Bairro != null && e.Endereco.Bairro.Nome.ToUpper().Contains(bairroFilter));
-        }
-
-        query = ApplyOrdering(query, sortBy, sortDir);
-
-        var totalItems = await query.LongCountAsync();
-        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        var result = await _estacionamentoRepository.SearchAsync(page, pageSize, sortBy, sortDir, nome, ufSigla, cidadeNome, bairroNome, cancellationToken);
+        var totalPages = (int)Math.Ceiling(result.TotalItems / (double)pageSize);
 
         return new PagedResultDto<EstacionamentoOutDto>
         {
             Page = page,
             PageSize = pageSize,
-            TotalItems = totalItems,
+            TotalItems = result.TotalItems,
             TotalPages = totalPages,
-            Items = items.Select(MapToDto).ToList()
+            Items = result.Items.Select(MapToDto).ToList()
         };
     }
 
-    public async Task<EstacionamentoOutDto> FindByIdAsync(long id)
+    public async Task<EstacionamentoOutDto> FindByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.FindById");
         activity?.SetTag("estacionamento.id", id);
 
-        var est = await WithEndereco(_context.Estacionamentos.AsNoTracking())
-            .FirstOrDefaultAsync(e => e.Id == id)
+        var estacionamento = await _estacionamentoRepository.FindByIdWithEnderecoAsync(id, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Estacionamento {id} não encontrado");
-        return MapToDto(est);
+        return MapToDto(estacionamento);
     }
 
-    public async Task<EstacionamentoOutDto> UpdateAsync(long id, EstacionamentoInDto dto)
+    public async Task<EstacionamentoOutDto> UpdateAsync(long id, EstacionamentoInDto dto, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.Update");
         activity?.SetTag("estacionamento.id", id);
-        activity?.SetTag("estacionamento.nome", dto.Nome);
 
-        var est = await WithEndereco(_context.Estacionamentos)
-            .FirstOrDefaultAsync(e => e.Id == id)
+        var estacionamento = await _estacionamentoRepository.FindTrackedByIdWithEnderecoAsync(id, cancellationToken)
             ?? throw new EntityNotFoundException($"Estacionamento {id} não encontrado");
 
         var enderecoDto = dto.Endereco ?? throw new ValidationException("Endereço é obrigatório");
-        await UpsertEnderecoAsync(enderecoDto, est.Endereco);
+        await _enderecoRepository.UpsertAsync(enderecoDto, estacionamento.Endereco, cancellationToken);
 
-        est.OperadoraId = dto.OperadoraId;
-        est.Nome = dto.Nome;
-        await _context.SaveChangesAsync();
-        return MapToDto(est);
+        estacionamento.OperadoraId = dto.OperadoraId;
+        estacionamento.Nome = dto.Nome;
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("ESTACIONAMENTO_UPDATED", estacionamento.Id, new { estacionamento.Id, estacionamento.Nome, estacionamento.OperadoraId }, cancellationToken);
+
+        return MapToDto(estacionamento);
     }
 
-    public async Task DeleteAsync(long id)
+    public async Task DeleteAsync(long id, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("EstacionamentoService.Delete");
         activity?.SetTag("estacionamento.id", id);
 
-        var est = await _context.Estacionamentos.FindAsync(id)
+        var estacionamento = await _estacionamentoRepository.FindTrackedByIdWithEnderecoAsync(id, cancellationToken)
             ?? throw new EntityNotFoundException($"Estacionamento {id} não encontrado");
-        _context.Estacionamentos.Remove(est);
-        await _context.SaveChangesAsync();
+
+        _estacionamentoRepository.Remove(estacionamento);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("ESTACIONAMENTO_DELETED", id, new { Id = id }, cancellationToken);
     }
 
-    private IQueryable<Estacionamento> WithEndereco(IQueryable<Estacionamento> query)
-    {
-        return query
-            .Include(e => e.Endereco)
-                .ThenInclude(e => e!.Bairro)
-                    .ThenInclude(b => b!.Cidade)
-                        .ThenInclude(c => c!.Uf);
-    }
-    private static IQueryable<Estacionamento> ApplyOrdering(IQueryable<Estacionamento> query, string? sortBy, string sortDir)
-    {
-        var ascending = sortDir != "desc";
-        var key = string.IsNullOrWhiteSpace(sortBy) ? "nome" : sortBy.Trim().ToLowerInvariant();
+    private Task WriteAuditAsync(string eventType, long entityId, object payload, CancellationToken cancellationToken)
+        => _auditEventRepository.WriteAsync(new AuditEventWriteDto(
+            eventType,
+            nameof(Estacionamento),
+            entityId.ToString(),
+            null,
+            null,
+            payload,
+            "EstacionamentoService"), cancellationToken);
 
-        return key switch
-        {
-            "ufsla" or "ufsigla" => ascending
-                ? query.OrderBy(e => e.Endereco!.Bairro!.Cidade!.Uf!.Sigla ?? string.Empty)
-                : query.OrderByDescending(e => e.Endereco!.Bairro!.Cidade!.Uf!.Sigla ?? string.Empty),
-            "cidadenome" or "cidade" => ascending
-                ? query.OrderBy(e => e.Endereco!.Bairro!.Cidade!.Nome ?? string.Empty)
-                : query.OrderByDescending(e => e.Endereco!.Bairro!.Cidade!.Nome ?? string.Empty),
-            _ => ascending
-                ? query.OrderBy(e => e.Nome)
-                : query.OrderByDescending(e => e.Nome)
-        };
-    }
-
-    private async Task<Endereco> UpsertEnderecoAsync(EnderecoInDto dto, Endereco? endereco = null)
-    {
-        var ufSigla = dto.Uf.Trim().ToUpperInvariant();
-        var ufNome = string.IsNullOrWhiteSpace(dto.UfNome) ? ufSigla : dto.UfNome.Trim();
-
-        var uf = await _context.Ufs.FindAsync(ufSigla);
-        if (uf is null)
-        {
-            uf = new Uf { Sigla = ufSigla, Nome = ufNome };
-            _context.Ufs.Add(uf);
-        }
-        else if (!string.IsNullOrWhiteSpace(dto.UfNome) && !string.Equals(uf.Nome, ufNome, System.StringComparison.OrdinalIgnoreCase))
-        {
-            uf.Nome = ufNome;
-        }
-
-        var cidadeNome = dto.Cidade.Trim();
-        var cidade = await _context.Cidades
-            .FirstOrDefaultAsync(c => c.Nome == cidadeNome && c.UfSigla == ufSigla);
-        if (cidade is null)
-        {
-            cidade = new Cidade { Nome = cidadeNome, UfSigla = ufSigla, Uf = uf };
-            _context.Cidades.Add(cidade);
-        }
-
-        Bairro? bairro = null;
-        if (cidade.Id > 0)
-        {
-            bairro = await _context.Bairros.FirstOrDefaultAsync(b => b.Nome == dto.Bairro && b.CidadeId == cidade.Id);
-        }
-
-        if (bairro is null)
-        {
-            bairro = new Bairro { Nome = dto.Bairro.Trim(), Cidade = cidade };
-            _context.Bairros.Add(bairro);
-        }
-
-        if (endereco is null)
-        {
-            endereco = new Endereco();
-            _context.Enderecos.Add(endereco);
-        }
-
-        endereco.Cep = dto.Cep;
-        endereco.Logradouro = dto.Logradouro.Trim();
-        endereco.Numero = dto.Numero;
-        endereco.Complemento = dto.Complemento;
-        endereco.Latitude = dto.Latitude;
-        endereco.Longitude = dto.Longitude;
-        endereco.Bairro = bairro;
-
-        return endereco;
-    }
-
-    private static EstacionamentoOutDto MapToDto(Estacionamento est)
-    {
-        return new EstacionamentoOutDto(est.Id, est.Nome, MapEndereco(est.Endereco));
-    }
+    private static EstacionamentoOutDto MapToDto(Estacionamento estacionamento)
+        => new(estacionamento.Id, estacionamento.Nome, MapEndereco(estacionamento.Endereco));
 
     private static EnderecoOutDto? MapEndereco(Endereco? endereco)
     {
@@ -254,20 +155,16 @@ public class EstacionamentoService
             return null;
         }
 
-        var bairro = endereco.Bairro;
-        var cidade = bairro?.Cidade;
-        var uf = cidade?.Uf;
-
         return new EnderecoOutDto(
             endereco.Id,
             endereco.Cep,
             endereco.Logradouro,
             endereco.Numero,
             endereco.Complemento,
-            bairro?.Nome,
-            cidade?.Nome,
-            uf?.Sigla,
-            uf?.Nome,
+            endereco.Bairro?.Nome,
+            endereco.Bairro?.Cidade?.Nome,
+            endereco.Bairro?.Cidade?.Uf?.Sigla,
+            endereco.Bairro?.Cidade?.Uf?.Nome,
             endereco.Latitude,
             endereco.Longitude);
     }

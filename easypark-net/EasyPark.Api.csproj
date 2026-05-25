@@ -8,22 +8,38 @@
 
   <ItemGroup>
     <Compile Remove="tests\**\*.cs" />
+    <Compile Remove="Models\**\*.cs" />
+    <Compile Remove="Dtos\**\*.cs" />
+    <Compile Remove="Services\**\*.cs" />
+    <Compile Remove="Data\**\*.cs" />
+    <Compile Remove="Exceptions\**\*.cs" />
+    <Compile Remove="Filters\**\*.cs" />
+    <Compile Remove="Security\**\*.cs" />
+    <Compile Remove="Controllers\**\*.cs" />
+    <Compile Remove="Observability\EasyParkTelemetry.cs" />
+    <Compile Remove="EasyPark.Domain\**\*.cs" />
+    <Compile Remove="EasyPark.Application\**\*.cs" />
+    <Compile Remove="EasyPark.Infrastructure\**\*.cs" />
     <Content Remove="tests\**" />
     <EmbeddedResource Remove="tests\**" />
     <None Remove="tests\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.12" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.15.2" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.2" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.2" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.1" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.15.0" />
-    <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.21.121" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.120" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="EasyPark.Domain\EasyPark.Domain.csproj" />
+    <ProjectReference Include="EasyPark.Application\EasyPark.Application.csproj" />
+    <ProjectReference Include="EasyPark.Infrastructure\EasyPark.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

@@ -19,24 +19,58 @@ public class Reserva
     [Column("VAGA_ID")]
     public long VagaId { get; set; }
 
-    [Column("STATUS")]
+    [Column("ESTADO")]
     public string? Status { get; set; }
 
-    [Column("DATA_INICIO")]
+    [Column("CRIADO_EM")]
+    public DateTimeOffset CriadoEm { get; set; } = DateTimeOffset.UtcNow;
+
+    [Column("INICIO_PREVISTO")]
     public DateTimeOffset? DataInicio { get; set; }
 
-    [Column("DATA_FIM")]
+    [NotMapped]
     public DateTimeOffset? DataFim { get; set; }
 
-    [Column("ETA")]
-    public DateTimeOffset? Eta { get; set; }
+    [Column("DURACAO_MINUTOS")]
+    public int? DuracaoMinutos { get; set; }
+
+    [Column("ANTECEDENCIA_MINUTOS")]
+    public int? AntecedenciaMinutos { get; set; }
+
+    [Column("CONFIRMADO_EM")]
+    public DateTimeOffset? ConfirmadoEm { get; set; }
+
+    [Column("OCUPADO_EM")]
+    public DateTimeOffset? OcupadoEm { get; set; }
+
+    [Column("PAGO_EM")]
+    public DateTimeOffset? PagoEm { get; set; }
+
+    [Column("MOTIVO_CANCELAMENTO")]
+    public string? MotivoCancelamento { get; set; }
 
     [Column("VAGA_BLOQUEADA")]
     public bool VagaBloqueada { get; set; }
 
-    [Column("VALOR_PREVISTO")]
+    [Column("ETA_ORIGEM")]
+    public string? EtaOrigem { get; set; }
+
+    [Column("ETA_MINUTOS")]
+    public int? EtaMinutos { get; set; }
+
+    [Column("ETA_ATUALIZADO_EM")]
+    public DateTimeOffset? EtaAtualizadoEm { get; set; }
+
+    [NotMapped]
+    public DateTimeOffset? Eta
+    {
+        get => EtaAtualizadoEm;
+        set => EtaAtualizadoEm = value;
+    }
+
+    [NotMapped]
     public decimal? ValorPrevisto { get; set; }
 
-    [Column("VALOR_FINAL")]
+    [NotMapped]
     public decimal? ValorFinal { get; set; }
 }

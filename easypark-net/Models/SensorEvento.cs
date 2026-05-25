@@ -25,4 +25,10 @@ public class SensorEvento
 
     [Column("OCORRIDO_EM")]
     public DateTimeOffset OcorridoEm { get; set; }
+
+    [Column("RECEBIDO_EM")]
+    public DateTimeOffset? RecebidoEm { get; set; }
+
+    [Column("PAYLOAD")]
+    public string? Payload { get; set; }
 }

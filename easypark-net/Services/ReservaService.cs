@@ -1,32 +1,43 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using EasyPark.Api.Data;
 using EasyPark.Api.Dtos;
 using EasyPark.Api.Exceptions;
 using EasyPark.Api.Models;
 using EasyPark.Api.Observability;
-using Microsoft.EntityFrameworkCore;
+using EasyPark.Application.Abstractions;
 
 namespace EasyPark.Api.Services;
 
-/// Serviço responsável pelas regras de negócio de reservas.
 public class ReservaService
 {
-    private readonly EasyParkContext _context;
+    private readonly IReservaRepository _reservaRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IVagaRepository _vagaRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditEventRepository _auditEventRepository;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public ReservaService(EasyParkContext context)
+    public ReservaService(
+        IReservaRepository reservaRepository,
+        IUserRepository userRepository,
+        IVagaRepository vagaRepository,
+        IUnitOfWork unitOfWork,
+        IAuditEventRepository auditEventRepository,
+        ICurrentUserContext currentUserContext)
     {
-        _context = context;
+        _reservaRepository = reservaRepository;
+        _userRepository = userRepository;
+        _vagaRepository = vagaRepository;
+        _unitOfWork = unitOfWork;
+        _auditEventRepository = auditEventRepository;
+        _currentUserContext = currentUserContext;
     }
 
-    public async Task<ReservaOutDto> CreateAsync(ReservaInDto dto)
+    public async Task<ReservaOutDto> CreateAsync(ReservaInDto dto, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.Create");
-        activity?.SetTag("usuario.id", dto.UsuarioId);
-        activity?.SetTag("vaga.id", dto.VagaId);
 
-        await EnsureRelacionamentosAsync(dto.UsuarioId, dto.VagaId);
+        var actorId = RequireAuthenticatedUserId();
+        EnsureOwnership(dto.UsuarioId);
+        await EnsureRelacionamentosAsync(dto.UsuarioId, dto.VagaId, cancellationToken);
 
         var reserva = new Reserva
         {
@@ -41,18 +52,21 @@ public class ReservaService
             ValorFinal = dto.ValorFinal
         };
 
-        _context.Reservas.Add(reserva);
-        await _context.SaveChangesAsync();
+        _reservaRepository.Add(reserva);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("RESERVA_CREATED", reserva.Id, actorId, reserva, cancellationToken);
+
         return MapToDto(reserva);
     }
 
-    public async Task<ReservaOutDto> FindByIdAsync(long id)
+    public async Task<ReservaOutDto> FindByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.FindById");
-        activity?.SetTag("reserva.id", id);
 
-        var reserva = await _context.Reservas.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id)
+        var reserva = await _reservaRepository.FindByIdAsync(id, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Reserva {id} não encontrada");
+
+        EnsureCanAccess(reserva.UsuarioId);
         return MapToDto(reserva);
     }
 
@@ -65,70 +79,45 @@ public class ReservaService
         long? vagaId,
         string? status,
         DateTimeOffset? dataInicioDe,
-        DateTimeOffset? dataInicioAte)
+        DateTimeOffset? dataInicioAte,
+        CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.Search");
-        activity?.SetTag("page", page);
-        activity?.SetTag("page.size", pageSize);
-        activity?.SetTag("reserva.status", status);
+
+        var actorId = RequireAuthenticatedUserId();
+        if (!_currentUserContext.IsAdmin)
+        {
+            usuarioId = actorId;
+        }
 
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
         sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
 
-        IQueryable<Reserva> query = _context.Reservas.AsNoTracking();
-
-        if (usuarioId.HasValue)
-        {
-            query = query.Where(r => r.UsuarioId == usuarioId.Value);
-        }
-
-        if (vagaId.HasValue)
-        {
-            query = query.Where(r => r.VagaId == vagaId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            var statusFilter = status.Trim().ToUpperInvariant();
-            query = query.Where(r => r.Status != null && r.Status.ToUpper() == statusFilter);
-        }
-
-        if (dataInicioDe.HasValue)
-        {
-            query = query.Where(r => r.DataInicio >= dataInicioDe.Value);
-        }
-
-        if (dataInicioAte.HasValue)
-        {
-            query = query.Where(r => r.DataInicio <= dataInicioAte.Value);
-        }
-
-        query = ApplyOrdering(query, sortBy, sortDir);
-
-        var totalItems = await query.LongCountAsync();
-        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        var result = await _reservaRepository.SearchAsync(page, pageSize, sortBy, sortDir, usuarioId, vagaId, status, dataInicioDe, dataInicioAte, cancellationToken);
+        var totalPages = (int)Math.Ceiling(result.TotalItems / (double)pageSize);
 
         return new PagedResultDto<ReservaOutDto>
         {
             Page = page,
             PageSize = pageSize,
-            TotalItems = totalItems,
+            TotalItems = result.TotalItems,
             TotalPages = totalPages,
-            Items = items.Select(MapToDto).ToList()
+            Items = result.Items.Select(MapToDto).ToList()
         };
     }
 
-    public async Task<ReservaOutDto> UpdateAsync(long id, ReservaInDto dto)
+    public async Task<ReservaOutDto> UpdateAsync(long id, ReservaInDto dto, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.Update");
-        activity?.SetTag("reserva.id", id);
 
-        var reserva = await _context.Reservas.FirstOrDefaultAsync(r => r.Id == id)
+        var actorId = RequireAuthenticatedUserId();
+        var reserva = await _reservaRepository.FindTrackedByIdAsync(id, cancellationToken)
             ?? throw new EntityNotFoundException($"Reserva {id} não encontrada");
 
-        await EnsureRelacionamentosAsync(dto.UsuarioId, dto.VagaId);
+        EnsureCanAccess(reserva.UsuarioId);
+        EnsureOwnership(dto.UsuarioId);
+        await EnsureRelacionamentosAsync(dto.UsuarioId, dto.VagaId, cancellationToken);
 
         reserva.UsuarioId = dto.UsuarioId;
         reserva.VagaId = dto.VagaId;
@@ -140,44 +129,65 @@ public class ReservaService
         reserva.ValorPrevisto = dto.ValorPrevisto;
         reserva.ValorFinal = dto.ValorFinal;
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("RESERVA_UPDATED", reserva.Id, actorId, reserva, cancellationToken);
         return MapToDto(reserva);
     }
 
-    public async Task DeleteAsync(long id)
+    public async Task DeleteAsync(long id, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("ReservaService.Delete");
-        activity?.SetTag("reserva.id", id);
 
-        var reserva = await _context.Reservas.FindAsync(id)
+        var actorId = RequireAuthenticatedUserId();
+        var reserva = await _reservaRepository.FindTrackedByIdAsync(id, cancellationToken)
             ?? throw new EntityNotFoundException($"Reserva {id} não encontrada");
-        _context.Reservas.Remove(reserva);
-        await _context.SaveChangesAsync();
+
+        EnsureCanAccess(reserva.UsuarioId);
+        _reservaRepository.Remove(reserva);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("RESERVA_DELETED", id, actorId, new { Id = id }, cancellationToken);
     }
 
-    private async Task EnsureRelacionamentosAsync(long usuarioId, long vagaId)
+    private async Task EnsureRelacionamentosAsync(long usuarioId, long vagaId, CancellationToken cancellationToken)
     {
-        _ = await _context.Usuarios.FindAsync(usuarioId) ?? throw new EntityNotFoundException($"Usuário {usuarioId} não encontrado");
-        _ = await _context.Vagas.FindAsync(vagaId) ?? throw new EntityNotFoundException($"Vaga {vagaId} não encontrada");
+        _ = await _userRepository.FindByIdAsync(usuarioId, cancellationToken: cancellationToken)
+            ?? throw new EntityNotFoundException($"Usuário {usuarioId} não encontrado");
+
+        _ = await _vagaRepository.FindByIdAsync(vagaId, cancellationToken: cancellationToken)
+            ?? throw new EntityNotFoundException($"Vaga {vagaId} não encontrada");
     }
 
-    private static IQueryable<Reserva> ApplyOrdering(IQueryable<Reserva> query, string? sortBy, string sortDir)
+    private void EnsureCanAccess(long usuarioId)
     {
-        var ascending = sortDir != "desc";
-        var key = string.IsNullOrWhiteSpace(sortBy) ? "data" : sortBy.Trim().ToLowerInvariant();
-
-        return key switch
+        if (!_currentUserContext.IsAdmin && _currentUserContext.UserId != usuarioId)
         {
-            "usuario" => ascending ? query.OrderBy(r => r.UsuarioId) : query.OrderByDescending(r => r.UsuarioId),
-            "vaga" => ascending ? query.OrderBy(r => r.VagaId) : query.OrderByDescending(r => r.VagaId),
-            "status" => ascending ? query.OrderBy(r => r.Status) : query.OrderByDescending(r => r.Status),
-            _ => ascending ? query.OrderBy(r => r.DataInicio) : query.OrderByDescending(r => r.DataInicio)
-        };
+            throw new ForbiddenException("Você não tem acesso a esta reserva.");
+        }
     }
+
+    private void EnsureOwnership(long usuarioId)
+    {
+        if (!_currentUserContext.IsAdmin && _currentUserContext.UserId != usuarioId)
+        {
+            throw new ForbiddenException("Você não pode operar reservas de outro usuário.");
+        }
+    }
+
+    private long RequireAuthenticatedUserId()
+        => _currentUserContext.UserId ?? throw new UnauthorizedException("Usuário autenticado é obrigatório.");
+
+    private Task WriteAuditAsync(string eventType, long entityId, long actorId, object payload, CancellationToken cancellationToken)
+        => _auditEventRepository.WriteAsync(new AuditEventWriteDto(
+            eventType,
+            nameof(Reserva),
+            entityId.ToString(),
+            actorId,
+            _currentUserContext.CorrelationId,
+            payload,
+            "ReservaService"), cancellationToken);
 
     private static ReservaOutDto MapToDto(Reserva reserva)
-    {
-        return new ReservaOutDto(
+        => new(
             reserva.Id,
             reserva.UsuarioId,
             reserva.VagaId,
@@ -188,5 +198,4 @@ public class ReservaService
             reserva.VagaBloqueada,
             reserva.ValorPrevisto,
             reserva.ValorFinal);
-    }
 }

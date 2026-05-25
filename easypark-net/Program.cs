@@ -1,14 +1,18 @@
-using System.Linq;
-using EasyPark.Api.Data;
-using EasyPark.Api.Filters;
+using System.Text;
+using EasyPark.Api.Authentication;
 using EasyPark.Api.HealthChecks;
+using EasyPark.Api.Middleware;
 using EasyPark.Api.Observability;
-using EasyPark.Api.Security;
 using EasyPark.Api.Services;
+using EasyPark.Application.Abstractions;
+using EasyPark.Infrastructure;
+using EasyPark.Infrastructure.Options;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Options;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Prometheus;
@@ -24,37 +28,48 @@ builder.Host.UseSerilog((context, services, configuration) =>
         .Enrich.FromLogContext();
 });
 
-var connectionString = builder.Configuration.GetConnectionString("Default") ?? string.Empty;
-
-builder.Services.AddDbContext<EasyParkContext>(options =>
-    options.UseOracle(connectionString));
-
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserContext, HttpCurrentUserContext>();
 builder.Services.AddScoped<VagaService>();
 builder.Services.AddScoped<EstacionamentoService>();
 builder.Services.AddScoped<ReservaService>();
 builder.Services.AddScoped<PagamentoService>();
 builder.Services.AddScoped<JobsService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AuditService>();
 
 builder.Services
-    .AddAuthentication(ApiKeyAuthenticationOptions.SchemeName)
-    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
-        ApiKeyAuthenticationOptions.SchemeName,
-        _ => { });
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer();
+
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtOptions>>((options, jwtOptionsAccessor) =>
+    {
+        var jwtOptions = jwtOptionsAccessor.Value;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
 builder.Services.AddAuthorization();
-
-builder.Services.AddHttpClient("external-health", client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(5);
-});
-
+builder.Services.AddHttpClient("external-health", client => client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: ["live"])
     .AddCheck<OracleHealthCheck>("oracle", tags: ["ready"])
+    .AddCheck<MongoHealthCheck>("mongo", tags: ["ready"])
     .AddCheck<ExternalUrlHealthCheck>("external_eta", tags: ["ready"]);
 
 builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(
-        serviceName: builder.Configuration["OpenTelemetry:ServiceName"] ?? "EasyPark.Api"))
+    .ConfigureResource(resource => resource.AddService(builder.Configuration["OpenTelemetry:ServiceName"] ?? "EasyPark.Api"))
     .WithTracing(tracing =>
     {
         tracing
@@ -70,30 +85,29 @@ builder.Services.AddOpenTelemetry()
         }
     });
 
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add<ExceptionFilter>();
-}).ConfigureApiBehaviorOptions(options =>
-{
-    options.InvalidModelStateResponseFactory = context =>
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
     {
-        var errors = context.ModelState
-            .Where(e => e.Value?.Errors.Count > 0)
-            .ToDictionary(k => k.Key, v => v.Value!.Errors.Select(e => e.ErrorMessage));
-        return new BadRequestObjectResult(new { validationErrors = errors });
-    };
-});
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .ToDictionary(k => k.Key, v => v.Value!.Errors.Select(e => e.ErrorMessage));
+            return new BadRequestObjectResult(new { validationErrors = errors });
+        };
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition(ApiKeyAuthenticationOptions.SchemeName, new OpenApiSecurityScheme
+    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
     {
-        Description = $"Informe a API key no header {ApiKeyAuthenticationOptions.HeaderName}.",
-        Name = ApiKeyAuthenticationOptions.HeaderName,
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = ApiKeyAuthenticationOptions.SchemeName
+        Description = "Informe o token JWT no formato Bearer {token}."
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -104,10 +118,10 @@ builder.Services.AddSwaggerGen(options =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = ApiKeyAuthenticationOptions.SchemeName
+                    Id = JwtBearerDefaults.AuthenticationScheme
                 }
             },
-            []
+            Array.Empty<string>()
         }
     });
 });
@@ -122,9 +136,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseHttpMetrics();
 app.UseAuthentication();
+app.UseMiddleware<AuthenticatedUserEnrichmentMiddleware>();
 app.UseAuthorization();
 
 var healthOptions = new HealthCheckOptions

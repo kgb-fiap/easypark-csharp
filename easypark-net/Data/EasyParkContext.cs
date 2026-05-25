@@ -59,6 +59,8 @@ public class EasyParkContext : DbContext
         {
             e.HasOne(x => x.Bairro).WithMany().HasForeignKey(x => x.BairroId)
                 .OnDelete(DeleteBehavior.SetNull);
+            e.Property(x => x.Latitude).HasPrecision(9, 6);
+            e.Property(x => x.Longitude).HasPrecision(9, 6);
         });
 
         builder.Entity<TipoVaga>(e =>
@@ -66,6 +68,7 @@ public class EasyParkContext : DbContext
             e.Property(x => x.EhEletrica).HasMaxLength(1).HasConversion(boolToYN);
             e.Property(x => x.EhAcessivel).HasMaxLength(1).HasConversion(boolToYN);
             e.Property(x => x.EhMoto).HasMaxLength(1).HasConversion(boolToYN);
+            e.Property(x => x.TarifaPorMinuto).HasPrecision(12, 4);
             e.HasIndex(x => x.Nome).IsUnique();
         });
 
@@ -78,11 +81,30 @@ public class EasyParkContext : DbContext
         {
             e.Property(x => x.Suspenso).HasMaxLength(1).HasConversion(boolToYN);
             e.HasIndex(x => x.Email).IsUnique();
+            e.Property(x => x.Nome).HasMaxLength(250);
+            e.Property(x => x.Email).HasMaxLength(320);
+            e.Property(x => x.PasswordHash).HasMaxLength(255);
+            e.Property(x => x.Telefone).HasMaxLength(30);
+            e.Property(x => x.Role).HasMaxLength(20);
         });
 
         builder.Entity<Reserva>(e =>
         {
             e.Property(x => x.VagaBloqueada).HasMaxLength(1).HasConversion(boolToYN);
+            e.Property(x => x.Status).HasMaxLength(20);
+            e.Property(x => x.MotivoCancelamento).HasMaxLength(4000);
+            e.Property(x => x.EtaOrigem).HasMaxLength(100);
+        });
+
+        builder.Entity<Pagamento>(e =>
+        {
+            e.Property(x => x.Valor).HasPrecision(12, 4);
+            e.Property(x => x.Status).HasMaxLength(30);
+            e.Property(x => x.MetodoPagamento).HasMaxLength(20);
+            e.Property(x => x.IdempotenciaChave).HasMaxLength(64);
+            e.Property(x => x.GatewayProvider).HasMaxLength(100);
+            e.Property(x => x.GatewayTxId).HasMaxLength(200);
+            e.Property(x => x.GatewayResponse).HasMaxLength(4000);
         });
 
         builder.Entity<Estacionamento>(e =>
@@ -103,6 +125,12 @@ public class EasyParkContext : DbContext
         {
             e.HasOne<Reserva>().WithOne().HasForeignKey<ReservaPreco>(x => x.ReservaId)
                 .OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.TarifaPorMinuto).HasPrecision(12, 4);
+            e.Property(x => x.PercentualAntecedencia).HasPrecision(8, 6);
+            e.Property(x => x.ValorPrevisto).HasPrecision(12, 4);
+            e.Property(x => x.ValorFinal).HasPrecision(12, 4);
+            e.Property(x => x.Observacao).HasMaxLength(200);
+            e.Property(x => x.Moeda).HasMaxLength(3);
         });
 
         // ReservaHist possui uma Reserva e é apagado em cascata.
@@ -110,6 +138,10 @@ public class EasyParkContext : DbContext
         {
             e.HasOne<Reserva>().WithMany().HasForeignKey(x => x.ReservaId)
                 .OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.FromEstado).HasMaxLength(20);
+            e.Property(x => x.Status).HasMaxLength(20);
+            e.Property(x => x.OrigemEvento).HasMaxLength(20);
+            e.Property(x => x.Observacao).HasMaxLength(200);
         });
 
         // PagamentoPagador e PagamentoCartao são 1:1 com Pagamento.
@@ -125,6 +157,10 @@ public class EasyParkContext : DbContext
         {
             e.HasOne<Pagamento>().WithOne().HasForeignKey<PagamentoCartao>(x => x.PagamentoId)
                 .OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.TransacaoId).HasMaxLength(200);
+            e.Property(x => x.Bandeira).HasMaxLength(20);
+            e.Property(x => x.UltimosDigitos).HasMaxLength(4);
+            e.Property(x => x.Titular).HasMaxLength(150);
         });
     }
 }

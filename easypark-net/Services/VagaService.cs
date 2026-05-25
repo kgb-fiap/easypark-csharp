@@ -1,39 +1,40 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using EasyPark.Api.Data;
 using EasyPark.Api.Dtos;
 using EasyPark.Api.Exceptions;
 using EasyPark.Api.Models;
 using EasyPark.Api.Observability;
-using Microsoft.EntityFrameworkCore;
+using EasyPark.Application.Abstractions;
 
 namespace EasyPark.Api.Services;
 
 public class VagaService
 {
-    private readonly EasyParkContext _context;
+    private readonly IVagaRepository _vagaRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditEventRepository _auditEventRepository;
 
-    public VagaService(EasyParkContext context)
+    public VagaService(IVagaRepository vagaRepository, IUnitOfWork unitOfWork, IAuditEventRepository auditEventRepository)
     {
-        _context = context;
+        _vagaRepository = vagaRepository;
+        _unitOfWork = unitOfWork;
+        _auditEventRepository = auditEventRepository;
     }
-    
-    /// Cria uma nova vaga, verifica a existência do nível e do tipo de vaga e garante que não haja outra vaga com o mesmo código no mesmo nível.    
-    public async Task<VagaOutDto> CreateAsync(VagaInDto dto)
+
+    public async Task<VagaOutDto> CreateAsync(VagaInDto dto, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("VagaService.Create");
         activity?.SetTag("vaga.codigo", dto.Codigo);
-        activity?.SetTag("nivel.id", dto.NivelId);
 
-        // Busca entidades relacionadas
-        _ = await _context.Niveis.FindAsync(dto.NivelId) ?? throw new EntityNotFoundException($"Nível {dto.NivelId} não encontrado");
-        _ = await _context.TiposVaga.FindAsync(dto.TipoVagaId) ?? throw new EntityNotFoundException($"Tipo de vaga {dto.TipoVagaId} não encontrado");
+        if (!await _vagaRepository.NivelExistsAsync(dto.NivelId, cancellationToken))
+        {
+            throw new EntityNotFoundException($"Nível {dto.NivelId} não encontrado");
+        }
 
-        // Checa unicidade por nível+codigo
-        bool exists = await _context.Vagas.AnyAsync(v => v.NivelId == dto.NivelId && v.Codigo.ToLower() == dto.Codigo.ToLower());
-        if (exists)
+        if (!await _vagaRepository.TipoVagaExistsAsync(dto.TipoVagaId, cancellationToken))
+        {
+            throw new EntityNotFoundException($"Tipo de vaga {dto.TipoVagaId} não encontrado");
+        }
+
+        if (await _vagaRepository.ExistsCodigoNoNivelAsync(dto.NivelId, dto.Codigo, cancellationToken: cancellationToken))
         {
             throw new BusinessException($"Já existe uma vaga com código {dto.Codigo} neste nível");
         }
@@ -47,26 +48,18 @@ public class VagaService
             CriadoEm = DateTimeOffset.UtcNow
         };
 
-        _context.Vagas.Add(vaga);
-        await _context.SaveChangesAsync();
+        _vagaRepository.Add(vaga);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("VAGA_CREATED", vaga.Id, new { vaga.Id, vaga.Codigo, vaga.NivelId, vaga.TipoVagaId }, cancellationToken);
 
-        return new VagaOutDto(vaga.Id, vaga.Codigo, vaga.Ativa, vaga.NivelId, vaga.TipoVagaId);
+        return MapToDto(vaga);
     }
 
-    /// Retorna todas as vagas do sistema. Se um status for especificado, filtra as vagas com base no status atual (via join com VagaStatus).
-    public async Task<IEnumerable<VagaOutDto>> FindAllAsync(string? status = null)
+    public async Task<IEnumerable<VagaOutDto>> FindAllAsync(string? status = null, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("VagaService.FindAll");
-        activity?.SetTag("vaga.status", status);
-
-        IQueryable<Vaga> query = _context.Vagas.AsNoTracking();
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            string filter = status.ToUpper();
-            query = query.Where(v => _context.VagaStatus.Any(s => s.VagaId == v.Id && s.StatusOcupacao!.ToUpper() == filter));
-        }
-        var list = await query.ToListAsync();
-        return list.Select(v => new VagaOutDto(v.Id, v.Codigo, v.Ativa, v.NivelId, v.TipoVagaId));
+        var items = await _vagaRepository.FindAllAsync(status, cancellationToken);
+        return items.Select(MapToDto);
     }
 
     public async Task<PagedResultDto<VagaOutDto>> SearchAsync(
@@ -78,168 +71,112 @@ public class VagaService
         long? nivelId,
         long? tipoVagaId,
         string? status,
-        string? codigo)
+        string? codigo,
+        CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("VagaService.Search");
         activity?.SetTag("page", page);
         activity?.SetTag("page.size", pageSize);
-        activity?.SetTag("vaga.status", status);
 
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 100);
         sortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
 
-        var query = from v in _context.Vagas.AsNoTracking()
-                    join n in _context.Niveis.AsNoTracking() on v.NivelId equals n.Id
-                    join t in _context.TiposVaga.AsNoTracking() on v.TipoVagaId equals t.Id
-                    join vs in _context.VagaStatus.AsNoTracking() on v.Id equals vs.VagaId into statusGroup
-                    from vs in statusGroup.DefaultIfEmpty()
-                    select new VagaSearchProjection(v, n, t, vs);
-
-        if (estacionamentoId.HasValue)
-        {
-            query = query.Where(x => x.Nivel.EstacionamentoId == estacionamentoId.Value);
-        }
-
-        if (nivelId.HasValue)
-        {
-            query = query.Where(x => x.Vaga.NivelId == nivelId.Value);
-        }
-
-        if (tipoVagaId.HasValue)
-        {
-            query = query.Where(x => x.Vaga.TipoVagaId == tipoVagaId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(status))
-        {
-            var statusFilter = status.Trim().ToUpperInvariant();
-            query = query.Where(x => x.Status != null && x.Status.StatusOcupacao != null && x.Status.StatusOcupacao.ToUpper() == statusFilter);
-        }
-
-        if (!string.IsNullOrWhiteSpace(codigo))
-        {
-            var codigoFilter = codigo.Trim().ToUpperInvariant();
-            query = query.Where(x => x.Vaga.Codigo.ToUpper().Contains(codigoFilter));
-        }
-
-        query = ApplyOrdering(query, sortBy, sortDir);
-
-        var totalItems = await query.LongCountAsync();
-        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        var vagas = await query.Skip((page - 1) * pageSize).Take(pageSize).Select(x => x.Vaga).ToListAsync();
+        var result = await _vagaRepository.SearchAsync(page, pageSize, sortBy, sortDir, estacionamentoId, nivelId, tipoVagaId, status, codigo, cancellationToken);
+        var totalPages = (int)Math.Ceiling(result.TotalItems / (double)pageSize);
 
         return new PagedResultDto<VagaOutDto>
         {
             Page = page,
             PageSize = pageSize,
-            TotalItems = totalItems,
+            TotalItems = result.TotalItems,
             TotalPages = totalPages,
-            Items = vagas.Select(v => new VagaOutDto(v.Id, v.Codigo, v.Ativa, v.NivelId, v.TipoVagaId)).ToList()
+            Items = result.Items.Select(MapToDto).ToList()
         };
     }
 
-
-    /// Retorna os dados de uma vaga pelo identificador. Lança EntityNotFoundException se a vaga não existir.
-    public async Task<VagaOutDto> FindByIdAsync(long id)
+    public async Task<VagaOutDto> FindByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("VagaService.FindById");
-        activity?.SetTag("vaga.id", id);
-
-        var vaga = await _context.Vagas.AsNoTracking().FirstOrDefaultAsync(v => v.Id == id)
+        var vaga = await _vagaRepository.FindByIdAsync(id, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Vaga {id} não encontrada");
-        return new VagaOutDto(vaga.Id, vaga.Codigo, vaga.Ativa, vaga.NivelId, vaga.TipoVagaId);
+        return MapToDto(vaga);
     }
 
-    /// Atualiza os dados de uma vaga existente. Garante que as associações existam e que não haja conflito de código dentro do mesmo nível se o código ou o nível forem alterados.
-    public async Task<VagaOutDto> UpdateAsync(long id, VagaInDto dto)
+    public async Task<VagaOutDto> UpdateAsync(long id, VagaInDto dto, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("VagaService.Update");
-        activity?.SetTag("vaga.id", id);
-        activity?.SetTag("vaga.codigo", dto.Codigo);
 
-        var vaga = await _context.Vagas.FindAsync(id) ?? throw new EntityNotFoundException($"Vaga {id} não encontrada");
+        var vaga = await _vagaRepository.FindByIdAsync(id, asNoTracking: false, cancellationToken: cancellationToken)
+            ?? throw new EntityNotFoundException($"Vaga {id} não encontrada");
 
-        // Verifica existência das entidades relacionadas
-        _ = await _context.Niveis.FindAsync(dto.NivelId) ?? throw new EntityNotFoundException($"Nível {dto.NivelId} não encontrado");
-        _ = await _context.TiposVaga.FindAsync(dto.TipoVagaId) ?? throw new EntityNotFoundException($"Tipo de vaga {dto.TipoVagaId} não encontrado");
-
-        bool changedCodigo = !string.Equals(vaga.Codigo, dto.Codigo, StringComparison.OrdinalIgnoreCase);
-        bool changedNivel = vaga.NivelId != dto.NivelId;
-        if (changedCodigo || changedNivel)
+        if (!await _vagaRepository.NivelExistsAsync(dto.NivelId, cancellationToken))
         {
-            bool exists = await _context.Vagas.AnyAsync(v => v.Id != id && v.NivelId == dto.NivelId && v.Codigo.ToLower() == dto.Codigo.ToLower());
-            if (exists)
-            {
-                throw new BusinessException($"Já existe uma vaga com código {dto.Codigo} neste nível");
-            }
+            throw new EntityNotFoundException($"Nível {dto.NivelId} não encontrado");
+        }
+
+        if (!await _vagaRepository.TipoVagaExistsAsync(dto.TipoVagaId, cancellationToken))
+        {
+            throw new EntityNotFoundException($"Tipo de vaga {dto.TipoVagaId} não encontrado");
+        }
+
+        var changedCodigo = !string.Equals(vaga.Codigo, dto.Codigo, StringComparison.OrdinalIgnoreCase);
+        var changedNivel = vaga.NivelId != dto.NivelId;
+
+        if ((changedCodigo || changedNivel) &&
+            await _vagaRepository.ExistsCodigoNoNivelAsync(dto.NivelId, dto.Codigo, id, cancellationToken))
+        {
+            throw new BusinessException($"Já existe uma vaga com código {dto.Codigo} neste nível");
         }
 
         vaga.NivelId = dto.NivelId;
         vaga.TipoVagaId = dto.TipoVagaId;
         vaga.Codigo = dto.Codigo;
         vaga.Ativa = dto.Ativa;
-        await _context.SaveChangesAsync();
 
-        return new VagaOutDto(vaga.Id, vaga.Codigo, vaga.Ativa, vaga.NivelId, vaga.TipoVagaId);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("VAGA_UPDATED", vaga.Id, new { vaga.Id, vaga.Codigo, vaga.NivelId, vaga.TipoVagaId }, cancellationToken);
+
+        return MapToDto(vaga);
     }
 
-    /// Remove uma vaga do sistema. Lança exceção se a vaga não existir. Remoção cascata via DbContext.
-    public async Task DeleteAsync(long id)
+    public async Task DeleteAsync(long id, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("VagaService.Delete");
-        activity?.SetTag("vaga.id", id);
 
-        var vaga = await _context.Vagas.FindAsync(id) ?? throw new EntityNotFoundException($"Vaga {id} não encontrada");
-        _context.Vagas.Remove(vaga);
-        await _context.SaveChangesAsync();
+        var vaga = await _vagaRepository.FindByIdAsync(id, asNoTracking: false, cancellationToken: cancellationToken)
+            ?? throw new EntityNotFoundException($"Vaga {id} não encontrada");
+
+        _vagaRepository.Remove(vaga);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await WriteAuditAsync("VAGA_DELETED", id, new { Id = id }, cancellationToken);
     }
 
-   
-    /// Retorna o status atual de uma vaga consultando a tabela VagaStatus. Se não houver registro, considera o status desconhecido.
-    public async Task<VagaStatusOutDto> GetStatusAsync(long id)
+    public async Task<VagaStatusOutDto> GetStatusAsync(long id, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("VagaService.GetStatus");
-        activity?.SetTag("vaga.id", id);
-
-        var status = await _context.VagaStatus.AsNoTracking().FirstOrDefaultAsync(s => s.VagaId == id);
-        if (status == null)
-        {
-            return new VagaStatusOutDto("DESCONHECIDO", null, null);
-        }
-        return new VagaStatusOutDto(status.StatusOcupacao ?? "DESCONHECIDO", status.UltimoOcorrido, status.SensorId);
+        var status = await _vagaRepository.GetStatusAsync(id, cancellationToken);
+        return status is null
+            ? new VagaStatusOutDto("DESCONHECIDO", null, null)
+            : new VagaStatusOutDto(status.StatusOcupacao ?? "DESCONHECIDO", status.UltimoOcorrido, status.SensorId);
     }
 
-    /// Lista todas as vagas pertencentes a um determinado estacionamento, realizando join entre Vaga e Nivel.
-    public async Task<IEnumerable<VagaOutDto>> FindByEstacionamentoAsync(long estacionamentoId)
+    public async Task<IEnumerable<VagaOutDto>> FindByEstacionamentoAsync(long estacionamentoId, CancellationToken cancellationToken = default)
     {
         using var activity = EasyParkTelemetry.ActivitySource.StartActivity("VagaService.FindByEstacionamento");
-        activity?.SetTag("estacionamento.id", estacionamentoId);
-
-        var query = from v in _context.Vagas.AsNoTracking()
-                    join n in _context.Niveis.AsNoTracking() on v.NivelId equals n.Id
-                    where n.EstacionamentoId == estacionamentoId
-                    select new VagaOutDto(v.Id, v.Codigo, v.Ativa, v.NivelId, v.TipoVagaId);
-        return await query.ToListAsync();
-    }
-    private static IQueryable<VagaSearchProjection> ApplyOrdering(IQueryable<VagaSearchProjection> query, string? sortBy, string sortDir)
-    {
-        var ascending = sortDir != "desc";
-        var key = string.IsNullOrWhiteSpace(sortBy) ? "codigo" : sortBy.Trim().ToLowerInvariant();
-
-        return key switch
-        {
-            "nivel" => ascending
-                ? query.OrderBy(x => x.Nivel.Nome)
-                : query.OrderByDescending(x => x.Nivel.Nome),
-            "tipo" => ascending
-                ? query.OrderBy(x => x.Tipo.Nome)
-                : query.OrderByDescending(x => x.Tipo.Nome),
-            _ => ascending
-                ? query.OrderBy(x => x.Vaga.Codigo)
-                : query.OrderByDescending(x => x.Vaga.Codigo)
-        };
+        var vagas = await _vagaRepository.FindByEstacionamentoAsync(estacionamentoId, cancellationToken);
+        return vagas.Select(MapToDto);
     }
 
-    private record VagaSearchProjection(Vaga Vaga, Nivel Nivel, TipoVaga Tipo, VagaStatus? Status);
+    private Task WriteAuditAsync(string eventType, long entityId, object payload, CancellationToken cancellationToken)
+        => _auditEventRepository.WriteAsync(new AuditEventWriteDto(
+            eventType,
+            nameof(Vaga),
+            entityId.ToString(),
+            null,
+            null,
+            payload,
+            "VagaService"), cancellationToken);
+
+    private static VagaOutDto MapToDto(Vaga vaga) => new(vaga.Id, vaga.Codigo, vaga.Ativa, vaga.NivelId, vaga.TipoVagaId);
 }

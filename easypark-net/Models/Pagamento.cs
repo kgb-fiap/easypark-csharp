@@ -29,4 +29,16 @@ public class Pagamento
 
     [Column("CRIADO_EM")]
     public DateTimeOffset CriadoEm { get; set; }
+
+    [Column("METODO_PAGAMENTO")]
+    public string? MetodoPagamento { get; set; }
+
+    [Column("GATEWAY_PROVIDER")]
+    public string? GatewayProvider { get; set; }
+
+    [Column("GATEWAY_TX_ID")]
+    public string? GatewayTxId { get; set; }
+
+    [Column("GATEWAY_RESPONSE")]
+    public string? GatewayResponse { get; set; }
 }
