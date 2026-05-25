@@ -1,5 +1,8 @@
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using EasyPark.Api.Data;
 using EasyPark.Api.Models;
+using EasyPark.Application.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -12,8 +15,6 @@ namespace EasyPark.IntegrationTests.Support;
 
 public class EasyParkApiFactory : WebApplicationFactory<Program>
 {
-    public const string ApiKey = "integration-test-key";
-
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -24,8 +25,12 @@ public class EasyParkApiFactory : WebApplicationFactory<Program>
         {
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Authentication:ApiKey"] = ApiKey,
-                ["ExternalServices:Eta:HealthUrl"] = ""
+                ["ExternalServices:Eta:HealthUrl"] = "",
+                ["Mongo:ConnectionString"] = "",
+                ["Jwt:Issuer"] = "EasyPark.Tests",
+                ["Jwt:Audience"] = "EasyPark.Tests.Client",
+                ["Jwt:SecretKey"] = "easypark-tests-super-secret-key-1234567890",
+                ["Jwt:ExpirationMinutes"] = "120"
             });
         });
 
@@ -41,10 +46,18 @@ public class EasyParkApiFactory : WebApplicationFactory<Program>
         });
     }
 
-    public HttpClient CreateAuthenticatedClient()
+    public async Task<HttpClient> CreateAuthenticatedClientAsync(long userId = 1)
     {
         var client = CreateClient();
-        client.DefaultRequestHeaders.Add("X-API-Key", ApiKey);
+        var credentials = userId == 1
+            ? new { email = "gabriel@email.com", password = "123456" }
+            : new { email = "cliente@email.com", password = "123456" };
+
+        var response = await client.PostAsJsonAsync("/api/auth/login", credentials);
+        response.EnsureSuccessStatusCode();
+
+        var token = await response.Content.ReadFromJsonAsync<AuthLoginResponse>();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token!.Token);
         return client;
     }
 
@@ -52,9 +65,19 @@ public class EasyParkApiFactory : WebApplicationFactory<Program>
     {
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<EasyParkContext>();
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
-        await SeedAsync(context);
+
+        if (context.Database.IsSqlite())
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
+        else
+        {
+            await context.Database.MigrateAsync();
+        }
+
+        await SeedAsync(context, passwordHasher);
     }
 
     protected override void Dispose(bool disposing)
@@ -67,7 +90,7 @@ public class EasyParkApiFactory : WebApplicationFactory<Program>
         }
     }
 
-    private static async Task SeedAsync(EasyParkContext context)
+    private static async Task SeedAsync(EasyParkContext context, IPasswordHasher passwordHasher)
     {
         var uf = new Uf { Sigla = "SP", Nome = "Sao Paulo" };
         var cidade = new Cidade { Id = 1, Nome = "Sao Paulo", UfSigla = "SP", Uf = uf };
@@ -104,8 +127,29 @@ public class EasyParkApiFactory : WebApplicationFactory<Program>
             StatusOcupacao = "LIVRE",
             UltimoOcorrido = DateTimeOffset.UtcNow
         });
-        context.Usuarios.Add(new Usuario { Id = 1, Nome = "Gabriel", Email = "gabriel@email.com" });
+        context.Usuarios.Add(new Usuario
+        {
+            Id = 1,
+            Nome = "Gabriel",
+            Email = "gabriel@email.com",
+            PasswordHash = passwordHasher.HashPassword("123456"),
+            Role = "Admin",
+            Suspenso = false,
+            CriadoEm = DateTimeOffset.UtcNow
+        });
+        context.Usuarios.Add(new Usuario
+        {
+            Id = 2,
+            Nome = "Cliente",
+            Email = "cliente@email.com",
+            PasswordHash = passwordHasher.HashPassword("123456"),
+            Role = "Cliente",
+            Suspenso = false,
+            CriadoEm = DateTimeOffset.UtcNow
+        });
 
         await context.SaveChangesAsync();
     }
+
+    private sealed record AuthLoginResponse(string Token, string TokenType, DateTimeOffset ExpiresAt, long UserId, string Email, string Role);
 }

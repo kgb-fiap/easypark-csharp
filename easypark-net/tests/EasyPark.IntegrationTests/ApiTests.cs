@@ -17,43 +17,34 @@ public class ApiTests
     [Fact]
     public async Task GetHealthLive_SemAutenticacao_RetornaHealthy()
     {
-        // Arrange
         using var client = _factory.CreateClient();
 
-        // Act
         var response = await client.GetAsync("/health/live");
         var content = await response.Content.ReadAsStringAsync();
 
-        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("Healthy", content);
     }
 
     [Fact]
-    public async Task GetVagas_SemApiKey_RetornaUnauthorized()
+    public async Task GetVagas_SemToken_RetornaUnauthorized()
     {
-        // Arrange
         using var client = _factory.CreateClient();
 
-        // Act
         var response = await client.GetAsync("/api/vagas");
 
-        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public async Task GetVagas_ComApiKey_RetornaOk()
+    public async Task GetVagas_ComJwt_RetornaOk()
     {
-        // Arrange
         await _factory.ResetDatabaseAsync();
-        using var client = _factory.CreateAuthenticatedClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync();
 
-        // Act
         var response = await client.GetAsync("/api/vagas");
         var content = await response.Content.ReadAsStringAsync();
 
-        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("A-01", content);
     }
@@ -61,9 +52,8 @@ public class ApiTests
     [Fact]
     public async Task PostReservas_ComPayloadValido_RetornaCreated()
     {
-        // Arrange
         await _factory.ResetDatabaseAsync();
-        using var client = _factory.CreateAuthenticatedClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync();
         var payload = new
         {
             usuarioId = 1,
@@ -77,11 +67,9 @@ public class ApiTests
             valorFinal = (decimal?)null
         };
 
-        // Act
         var response = await client.PostAsJsonAsync("/api/reservas", payload);
         var content = await response.Content.ReadAsStringAsync();
 
-        // Assert
         Assert.True(response.StatusCode == HttpStatusCode.Created, content);
         Assert.NotNull(response.Headers.Location);
     }
@@ -89,23 +77,19 @@ public class ApiTests
     [Fact]
     public async Task GetReservas_IdInexistente_RetornaNotFound()
     {
-        // Arrange
         await _factory.ResetDatabaseAsync();
-        using var client = _factory.CreateAuthenticatedClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync();
 
-        // Act
         var response = await client.GetAsync("/api/reservas/999");
 
-        // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
     public async Task PostVagas_ModelStateInvalido_RetornaBadRequest()
     {
-        // Arrange
         await _factory.ResetDatabaseAsync();
-        using var client = _factory.CreateAuthenticatedClient();
+        using var client = await _factory.CreateAuthenticatedClientAsync();
         var payload = new
         {
             nivelId = 1,
@@ -113,11 +97,9 @@ public class ApiTests
             ativa = true
         };
 
-        // Act
         var response = await client.PostAsJsonAsync("/api/vagas", payload);
         var content = await response.Content.ReadAsStringAsync();
 
-        // Assert
         Assert.True(response.StatusCode == HttpStatusCode.BadRequest, content);
         Assert.Contains("validationErrors", content);
     }
@@ -125,15 +107,12 @@ public class ApiTests
     [Fact]
     public async Task GetMetrics_SemAutenticacao_RetornaMetricasPrometheus()
     {
-        // Arrange
         using var client = _factory.CreateClient();
         await client.GetAsync("/health/live");
 
-        // Act
         var response = await client.GetAsync("/metrics");
         var content = await response.Content.ReadAsStringAsync();
 
-        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("# HELP", content);
     }
